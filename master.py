@@ -26,6 +26,8 @@ class master(threading.Thread):
         self.wait_queue=Queue.Queue()  #正在等待的任务组成的队列
         self.lock=lock   #设置线程锁
         
+        self.domain=domain 　#在这个域名范围内爬　
+        
         # 为实现任务管理设置的标志位 
         
         self.start_flag = False
@@ -65,11 +67,4 @@ class master(threading.Thread):
                 substread.start()  #启动子进程
                 self.threads.append(substread)
         
-                
             
-                    
-                
-                
-
-print master.__doc__
-
