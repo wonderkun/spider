@@ -11,11 +11,32 @@ import  time
 # driver.get('http://jszy.nwpu.edu.cn/')
 
 # print(driver.page_source)
+# class student(object):
+#     def __init__(self,name="",age=""):
+#         self.name=name
+#         self.age=age
+#         self.printf()
+#     def printf(self):
+#         print self.name,self.age
 
-class student(object):
-    def __init__(self,name="",age=""):
-        self.name=name
-        self.age=age
-    def printf(self):
-        print self.name,self.age
+import requests 
+import urllib
+import urllib2
+
+from bs4 import BeautifulSoup
+begin_time=time.time()
+url="http://range.pw/wp-content/uploads/2015/10/QQ图片20150516164635.jpg"
+response=urllib2.urlopen(url)
+data=response.read()
+
+soup=BeautifulSoup(data,'lxml')
+tags=soup.findAll(name='a')
+
+
+print tags
+
+print time.time()-begin_time
+
         
+        
+      
