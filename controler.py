@@ -13,25 +13,36 @@ class controler(threading.Thread):
         self.alive=True
         self.lock=lock
     def run(self):
-        i=0
+        i=0 
+        count=0
         while self.alive:
+            if len(self.father.visited)==len(self.father.pages):
+                if self.father.task_queue.qsize()==0 and self.father.wait_queue.qsize()==0:
+                    i+=1
+                    if i==3:
+                        self.father.dead_all=True
+                else:
+                    i=0
+                        
+            print "[*] I am controler!!"
+
             for thread in self.father.threads:
-                self.lock.acquire()           #读取子进程获取的url到父进程中来
+                # self.lock.acquire()           #读取子进程获取的url到父进程中来
                 while  len(thread.pages)>0:   #如果pages中有数据
                     page=thread.pages.pop(0)  #从最前面开始删除
                     if page in self.father.pages:
                         continue
                     self.father.pages.add(page)
                     self.father.wait_queue.put(page)                       
-                self.lock.release()
+                else:
+                    count=count+1
+                    if count==len(self.father.threads): #说明所有的页面都没有返回 pages
+                        time.sleep(3)
+                        count=0
+                    print "[*] "+thread.name+ " not return pages"
+                # self.lock.release()
                 
-            if len(self.father.visited)==len(self.father.pages):
-                if self.father.task_queue.qsize()==0 and self.father.wait_queue.qsize()==0:
-                    i+=1
-                    if i==3:
-                        self.father.dead_all=True
-                continue 
-            i=0
+           
                             
     def stop(self):
         if self.alive!=False:

@@ -16,15 +16,13 @@ class worker(threading.Thread):
      获取匹配页面中的url,找到合法的,返回给master 
      
     '''
-    def __init__(self, group=None, target=None, name=None, args=(),kwargs=None, verbose=None, father=None, lock=None, url=''):
+    def __init__(self, group=None, target=None, name=None, args=(),kwargs=None, verbose=None, father=None, lock=None):
         #  __init__(self, group=None, target=None, name=None, args=(), kwargs=None, verbose=None) #父类的初始化函数 
         threading.Thread.__init__(self)
         self.name=name  #自己的名字 
-        
-        self.url=url
+        self.url=''
         self.father=father  #标记自己的父进程
         self.lock=lock
-        
         self.pages=[]  #解析页面之后,获得的链接 
         self.temp_pages=[] #用来临时保存数据
         #为了让父进程识别自己,设置的一些标志位  
@@ -32,44 +30,38 @@ class worker(threading.Thread):
         self.finished_flag = False
         self.blocked_flag = False
         self.is_runable=True 
-        self.ignore=['png','jpg','bmp','gif','jpeg','ico','doc','ppt','pdf','xls','avi','flv','mp3','mp4','rmvb','wav','wmv','wav']  #此类文件不进行解析 
-        
+        # self.ignore=['png','jpg','bmp','gif','jpeg','ico','doc','ppt','pdf','xls','avi','flv','mp3','mp4','rmvb','wav','wmv','wav']  #此类文件不进行解析 
+        self.ignore=[]
     def run(self):
+    
         while self.is_runable:
-            self.start_flag=True
-                  
+            print self.name +" is  running!!"
+            try:
+                self.url=self.father.task_queue.get(block=True,timeout=3)
+            except Exception as e:
+                self.url=""
+                
             if self.url=="":       #如果说自己没有获得url 
                 self.start_flag=False
-                continue
-                
+                print "\033[49;35m[*]{name} Get url failed!!\033[0m".format(name=self.name)
+                continue 
             else:
-            
+                self.start_flag=True
                 if self.url in self.father.visited: #如果自己分配的url已经被其他进程访问过了 
                     print self.name+" is blocked!"
                     self.start_flag=False  #把自己阻塞起来
                     self.blocked_flag=True  #设阻塞的标志位  
                 else:
                     print self.name,"get url:"+self.url
-                    
-                    self.blocked_flag=False
                     time1=time.time()
                     self.get_url(url=self.url)  #调用函数,把这个页面的数据存储到self.temp_pages中去
-                    
                     print self.name,"finished url:"+self.url,"time:",time.time()-time1
-                    self.lock.acquire()
-                    self.pages+=self.temp_pages  #把url放入pages中去,父进程从pages中取走数据
-                    self.lock.release()
-                                    
+                    self.pages+=self.temp_pages  #把url放入pages中去,父进程从pages中取走数据                
                     self.temp_pages=[]  #清空临时表 
                     self.father.visited.add(self.url)
-                    
-                    
-                    self.url=""  #把自己的url参数置为空,防止一个url跑多次
-                    
                     #每次完成一个任务,这两个标志位置位                    
                     self.start_flag=False
                     self.finished_flag=True
-                    
                     
     def get_url(self,url=''):
         if url=='':
@@ -169,12 +161,3 @@ class worker(threading.Thread):
             self.is_runable=False
         
                        
-                    
-        
-        
-        
-        
-        
-  
-        
- 
