@@ -4,7 +4,8 @@
 
 import threading
 import time 
-import Queue 
+import Queue
+
 
 class controler(threading.Thread):
     def __init__(self,father=None,lock=None):
@@ -12,10 +13,12 @@ class controler(threading.Thread):
         self.father=father
         self.alive=True
         self.lock=lock
+         
     def run(self):
         i=0 
         count=0
         while self.alive:
+            print len(self.father.visited),len(self.father.pages)
             if len(self.father.visited)==len(self.father.pages):
                 if self.father.task_queue.qsize()==0 and self.father.wait_queue.qsize()==0:
                     i+=1
@@ -25,14 +28,14 @@ class controler(threading.Thread):
                     i=0
                         
             print "[*] I am controler!!"
-
+            
             for thread in self.father.threads:
                 # self.lock.acquire()           #读取子进程获取的url到父进程中来
                 while  len(thread.pages)>0:   #如果pages中有数据
                     page=thread.pages.pop(0)  #从最前面开始删除
-                    if page in self.father.pages:
+                    if  self.father.in_pages(page):  #
                         continue
-                    self.father.pages.add(page)
+                    self.father.add_pages(page)
                     self.father.wait_queue.put(page)                       
                 else:
                     count=count+1
@@ -41,9 +44,7 @@ class controler(threading.Thread):
                         count=0
                     print "[*] "+thread.name+ " not return pages"
                 # self.lock.release()
-                
-           
-                            
+                                     
     def stop(self):
         if self.alive!=False:
             self.alive=False

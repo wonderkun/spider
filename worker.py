@@ -28,7 +28,7 @@ class worker(threading.Thread):
         #为了让父进程识别自己,设置的一些标志位  
         self.start_flag = False
         self.finished_flag = False
-        self.blocked_flag = False
+        # self.blocked_flag = False
         self.is_runable=True 
         # self.ignore=['png','jpg','bmp','gif','jpeg','ico','doc','ppt','pdf','xls','avi','flv','mp3','mp4','rmvb','wav','wmv','wav']  #此类文件不进行解析 
         self.ignore=[]
@@ -42,26 +42,26 @@ class worker(threading.Thread):
                 self.url=""
                 
             if self.url=="":       #如果说自己没有获得url 
-                self.start_flag=False
+                
                 print "\033[49;35m[*]{name} Get url failed!!\033[0m".format(name=self.name)
                 continue 
             else:
-                self.start_flag=True
-                if self.url in self.father.visited: #如果自己分配的url已经被其他进程访问过了 
-                    print self.name+" is blocked!"
-                    self.start_flag=False  #把自己阻塞起来
-                    self.blocked_flag=True  #设阻塞的标志位  
-                else:
-                    print self.name,"get url:"+self.url
-                    time1=time.time()
-                    self.get_url(url=self.url)  #调用函数,把这个页面的数据存储到self.temp_pages中去
-                    print self.name,"finished url:"+self.url,"time:",time.time()-time1
-                    self.pages+=self.temp_pages  #把url放入pages中去,父进程从pages中取走数据                
-                    self.temp_pages=[]  #清空临时表 
-                    self.father.visited.add(self.url)
-                    #每次完成一个任务,这两个标志位置位                    
-                    self.start_flag=False
-                    self.finished_flag=True
+                # self.start_flag=True
+                # if self.father.in_visited(self.url): #如果自己分配的url已经被其他进程访问过了 
+                #     print self.name+" is blocked!"
+                #     self.start_flag=False  #把自己阻塞起来
+                #     self.blocked_flag=True  #设阻塞的标志位  
+                # else:
+                # print self.name,"get url:"+self.url
+                time1=time.time()
+                self.get_url(url=self.url)  #调用函数,把这个页面的数据存储到self.temp_pages中去
+                print self.name,"finished url:"+self.url,"time:",time.time()-time1
+                self.pages+=self.temp_pages  #把url放入pages中去,父进程从pages中取走数据                
+                self.temp_pages=[]  #清空临时表 
+                self.father.add_visited(self.url)
+                #每次完成一个任务,这两个标志位置位                    
+                self.start_flag=False
+                self.finished_flag=True
                     
     def get_url(self,url=''):
         if url=='':
@@ -94,7 +94,8 @@ class worker(threading.Thread):
                 ret=tag['href']
             except:
                 # print self.name+url,"Maybe not have href"
-                continue 
+                continue
+            
             res=urlparse.urlparse(ret)
             ret=urlparse.urlunparse((res[0],res[1],res[2],res[3],res[4],'')) #为了删除url中的锚点
             res=urlparse.urlparse(ret)   
@@ -104,16 +105,21 @@ class worker(threading.Thread):
                 ret=url_split[0]+"://"+url_split[1]+url_split[2]+ret 
                 ret=ret[:8]+ret[8:].replace("//",'/')  #把url中的//变为/
                 res=urlparse.urlparse(ret)
-                
                 #  防止 http://domain/dir/../dir/   出现在url中 
+                
                 if "../" in res[2]:
                     paths=res[2].split('/')
+                    
                     for i in range(len(paths)):
-                        if paths[i] == "..":
-                            paths[i]==''
-                            if paths[i-1]:
-                                paths[i-1]=''
-                                                    
+                        if ".."  in  paths[i]:     
+                            paths[i]=""
+                            t=i
+                            while t>-1:
+                                if paths[t] =="":
+                                    t-=1
+                                else:
+                                    paths[t]=""    
+                                    break                                      
                     temp_path=''
                     for path in paths:
                         if path=='':

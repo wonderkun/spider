@@ -7,6 +7,12 @@ import time
 import Queue 
 from worker import *
 from controler import *
+try:
+    import bsddb
+except:
+    print "import bsddb error!! Please install!"
+import os
+import hashlib
 
 
 class master(threading.Thread):
@@ -23,8 +29,8 @@ class master(threading.Thread):
     
     def __init__(self,thread_size=0,domain="",lock=None,tasks=[]):
         threading.Thread.__init__(self)  #初始化父类
-        self.visited=set()    #访问过的集合
-        self.pages=set()     #采集到的页面
+        self.visited=None    #访问过的集合
+        self.pages=None     #采集到的页面
         self.threads=[]  #存储每个线程
         self.wait_queue=Queue.Queue()  #正在等待的任务组成的队列
         self.lock=lock #设置线程锁
@@ -44,8 +50,26 @@ class master(threading.Thread):
         self.controler=controler(father=self,lock=self.lock)
         self.task_queue=Queue.Queue(self.task_num)
         self.__init_threads__()
+        self.__init__bsddb__()
+        
         self.begin_time=time.time()
         
+    def __init__bsddb__(self):
+        print "Create the bsddb!!"
+        print "[^] checking if the bsddb is exist"
+        if os.path.exists("pages.db"):
+            print "[*] Delete the exist  db!"
+            os.remove("pages.db")
+        if os.path.exists("visited.db"):
+            print "[*] Delete the visited.db"
+            os.remove("visited.db")
+        try:
+            self.pages=bsddb.btopen(file="pages.db",flag='c')
+            self.visited=bsddb.btopen(file="visited.db",flag='c')
+            print "[^] create db success!!"
+        except:
+            print "Create db error!!"
+                   
     def  __init_threads__(self):   #初始化线程,调用worker类,创建工作线程
         for i in range(self.thread_size):
             name="Thread %d"%(i)
@@ -53,11 +77,11 @@ class master(threading.Thread):
             substread=worker(father=self,lock=self.lock,name=name)
             substread.start()  #启动子进程
             self.threads.append(substread)
-                        
+                            
     def begin(self):
         for task in self.tasks:
             self.wait_queue.put(task)
-            self.pages.add(task)
+            self.add_pages(task)
             
         if self.is_running!=True:
             #启动标志位置位 
@@ -65,7 +89,48 @@ class master(threading.Thread):
             self.is_running=True  
             self.start()
             self.controler.start()
+    def check_url(self,url=""):
+        if url!="":
+            self.md5hash=hashlib.md5()
+            self.md5hash.update(url)
+            hash=self.md5hash.hexdigest()  #获取url的MD5值 
+            if self.visited.has_key(hash)==1:  #浏览过了
+                return 0
+            elif self.visited.has_key(hash)!=1 and self.pages.has_key(hash)==1:  #在page中,但是还没有浏览过 
+                return 1  #添加到任务队列中去了
+            else:  
+                #不在pages中的
+                return 2
+    def  in_visited(self,url=""):
+        flag=self.check_url(url)
+        if flag==0:
+            return True
+        else:
+            return False
             
+    def in_pages(self,url=""):
+        flag=self.check_url(url)
+        if flag==2:
+            return False
+        else:
+            return True
+    def add_visited(self,url=""):
+        if url=="":
+            return 0
+        self.md5hash=hashlib.md5()
+        self.md5hash.update(url)
+        hash=self.md5hash.hexdigest()
+        self.visited[hash]=url
+        self.visited.sync()
+    def add_pages(self,url=""):
+        if url=="":
+            return 0
+        self.md5hash=hashlib.md5()
+        self.md5hash.update(url)
+        hash=self.md5hash.hexdigest()
+        self.pages[hash]=url
+        self.pages.sync()
+         
     def run(self):
         #运行的主函数
         '''
@@ -80,7 +145,7 @@ class master(threading.Thread):
             print "\033[49;34mI am master!!\033[0m"
             k=0
             for thread  in self.threads:
-                if thread.start_flag==False: 
+                if thread.start_flag==False:
                     k+=1
                     
             if k==len(self.threads):      #如果全部任务都完成了,或者还没有开始,会出现这种情况  
@@ -103,12 +168,12 @@ class master(threading.Thread):
             if (self.finished_all==True) and (self.dead_all==True):
                 
                 print "result".center(197,'+')
-                
                 for i in self.pages:
-                    print "URL:",i
+                    print "URL:",self.pages[i]
+                    
                 print time.time()-self.begin_time
-                self.__stop()
-                  
+                
+                self.__stop()  
                                    
     def __stop(self):  #结束所有的子线程
         for thread in self.threads:
@@ -116,7 +181,6 @@ class master(threading.Thread):
         self.controler.stop()          
         if self.start_flag!=False:
             self.start_flag=False
+        self.pages.close()
+        self.visited.close()
             
-                                
-    
-        
