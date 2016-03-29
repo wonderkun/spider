@@ -9,6 +9,7 @@ import Queue
 import threading
 from bs4 import BeautifulSoup 
 
+
 class worker(threading.Thread):
     '''
      从master中的task_queue中获取任务,

@@ -49,8 +49,3 @@ class controler(threading.Thread):
         if self.alive!=False:
             self.alive=False
             
-
-        
-        
-        
-
