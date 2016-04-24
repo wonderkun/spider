@@ -1,3 +1,7 @@
 phantomjs
 *.pyc
 *.db
+
+/server/multiprocessing
+
+ 
