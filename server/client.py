@@ -30,10 +30,12 @@ m.connect()
 task = m.task_queue_n()
 result = m.response_queue_n()
 # 从task队列取任务,并把结果写入result队列:
-
-print task.get(10).domain
-
-
+while True:
+    domain=task.get(10)
+    print domain.printSelf()
+    newdomain=domainRecorder(rootDomain=domain.rootDomain,domain="test.www.baidu.com",path="test")
+    result.put(newdomain)
+    
 # for i in range(10):
 #     try:
 #         n = task.get(timeout=1)
@@ -44,4 +46,4 @@ print task.get(10).domain
 #     except Queue.Empty:
 #         print('task queue is empty.')
 # 处理结束:
-print('worker exit.')
+# print('worker exit.')
