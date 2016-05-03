@@ -40,7 +40,6 @@ class domainRecorder():
         return True
         
         
-        
     def  getUrl(self):  #返回此条记录的url
         return   urlparse.urljoin(self.schema+"://"+self.domain,self.path)
     

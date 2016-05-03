@@ -2,5 +2,6 @@ phantomjs
 *.pyc
 *.db
 /server/multiprocessing
+.vscode
 
  

@@ -12,9 +12,9 @@ if __name__=="__main__":
     p.add_argument('domain',type=str,action="store",help="The domain to crawler")
     p.add_argument('-d',action="store_true",help="Wether to crawler subdomain")
     args=p.parse_args()
-    
-    
     print args
+    
+    
     
     
     
