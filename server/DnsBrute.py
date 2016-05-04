@@ -98,15 +98,14 @@ class DnsBrute(object):
                             
                         if is_wildcard_record:
                             #get a wildcard record   
-                            
+                            print "get a wildcard record"
                             continue
                                  
-                        # ips = ', '.join([answer.address for answer in answers]) #获取响应的地址
+                        ips = ', '.join([answer.address for answer in answers]) #获取响应的地址
                                              
                         if (not self.is_intranet(answers[0].address)): #如果不是内网地址
                             #说明获得了一个子域名  
                             print cur_sub_domain,ips
-                            
                             for i in self.next_subs:   
                                 self.queue.put(i + '.' + sub)
                         break    
