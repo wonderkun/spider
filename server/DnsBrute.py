@@ -130,10 +130,12 @@ class DnsBrute(object):
                 self.STOP_ME=True
                 msg = '[WARNING] User aborted, wait all slave threads to exit...'
                 print msg
-        
 
+
+
+        
 if __name__=="__main__":
-    
+
     a=DnsBrute(rootDomain="baidu.com")
     
     a.run()
