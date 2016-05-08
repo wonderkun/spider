@@ -15,6 +15,12 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
+
+
+class HttpServer(BaseHTTPServer.HTTPServer):
+    pass  
+    
+
     
 class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -133,6 +139,7 @@ class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
         
     def translate_path(self, path):
     
+    
         """Translate a /-separated PATH to the local filename syntax.
 
         Components that mean special things to the local file system
@@ -156,20 +163,25 @@ class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
             path = os.path.join(path, word)
         if trailing_slash:
             path += '/'
-        return path    
+        return path  
+          
         
-def HttpServer(HandlerClass = HttpServerHandle,ServerClass = BaseHTTPServer.HTTPServer):
+        
+def HttpServer(HandlerClass = HttpServerHandle,ServerClass = HttpServer):
     
     server_address=('',8000)
     httpd=ServerClass(server_address,HandlerClass)
     
     sa = httpd.socket.getsockname()
     print "Serving HTTP on", sa[0], "port", sa[1], "..."
-       
     httpd.serve_forever()
     
+    # httpd.stop_server()
     
-
+    
+    
+    
+    
 if __name__ == '__main__':
     HttpServer()
     

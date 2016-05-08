@@ -11,7 +11,7 @@ class domainRecorder():
     '''
         用来记录域名,判断子域名的可用性,
         记录在同一个域名下的路径 
-        记录记录的个数 
+        记录子域名的个数 
         
     '''
     
@@ -38,8 +38,8 @@ class domainRecorder():
             response=req.get(url)
         except req.exceptions.ConnectionError,e:    #说明这是一个顶级域名            
             self.domain="www."+self.domain
-            
-            
+
+
     def printSelf(self):
         if self.isSubDomain:  #获取了subdomain 
             print "[INFO] Get  subdomain:[%s],RootDomain:[%s],Num:[%d]"%(self.domain,self.rootDomain,self.count)
@@ -64,9 +64,37 @@ class domainRecorder():
         return True
         
         
+
+
+    def __eq__(self,other):    #重载== 号运算符,判断两个url是否是在同一个目录下,简单的,就判定了一级目录  
+    
+        if self.path='/' or other.path='/':   # 如果任意一个url是根目录,就返回false
+            return False 
+            
+        if self.domain==other.domain:
+        
+            path1=[]
+            path2=[] 
+            
+            path_tmp1=self.path.split('/')
+            for i in path_tmp1:
+                if 1!='':
+                    path1.append(i)
+            path_tmp2=other.path.split('/')
+            for i in path_tmp2:
+                if 1!='':
+                    path2.append(i)
+            if path1[0]==path2[0]:
+                return True 
+                
+        return False
+        
+                     
     def  getUrl(self):  #返回此条记录的url
     
-        return   urlparse.urljoin(self.schema+"://"+self.domain,self.path)
+        url=urlparse.urljoin(self.schema+"://"+self.domain,self.path)
+        url=url.rstrip('/')+"/"  #必须用/结尾  
+        return url  
         
     
     

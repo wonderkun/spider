@@ -75,6 +75,7 @@ class TaskManager(BaseManager):
         
     def __print_self(self):
         print "[*] Http server starting on %s:%d  ..."%(self.address[0],8000)
+        print "[*] Start Server on %s:%d  ..."%(self.address[0],self.port)
         print "[*] Server authkey is %s"%(self.authkey)
         print "[*] To get help information,please visite %s:%d"%(self.address[0],8000)
         print "\n"
@@ -120,14 +121,17 @@ class TaskManager(BaseManager):
                  
     def pushTask(self):
         self.count=0
-        
-        while self.START_FLAG:    
+        while self.START_FLAG:
             try:
                 time.sleep(self.delay)
             except KeyboardInterrupt,e:
                 self.START_FLAG=False
+                if self.digSubDomain:
+                    self.DnsBrute.STOP_ME=True     
                 print "[WARNING] User aborted, wait all slave threads to exit..."
-                                
+                # 
+                self.shutdown_work()
+                
             else:
                   # 运行二进制指数退避算法   
                 self.delay=random.randint(0,2**self.count)
@@ -137,7 +141,7 @@ class TaskManager(BaseManager):
     def  shutdown_work(self):
         self.shutdown()
         
-        
+              
 if __name__=="__main__":
 
     from  argparse import  ArgumentParser
@@ -146,9 +150,9 @@ if __name__=="__main__":
     p.add_argument('domain',type=str,action="store",help="The domain to craw")
     p.add_argument('--authkey',action='store',type=str,default=b'123456',help="The authkey to connect to the server")
     p.add_argument('-i',action="store_true",help="Weather to craw subdomain")
-    p.add_argument('-T',action="store",type=int,default=2,help="The thread to burte subdomain")
+    p.add_argument('-T',action="store",type=int,default=10,help="The thread to burte subdomain")
     args=p.parse_args() 
-   
+    
     #start server 
             
     manager=TaskManager(authkey=args.authkey,rootDomain=args.domain,digSubDomain=args.i,port=args.port,threads_num=args.T)

@@ -14,6 +14,9 @@ except:
 import os
 import hashlib
 
+from domainRecorder import *  
+
+
 
 class master(threading.Thread):
     '''
@@ -27,7 +30,7 @@ class master(threading.Thread):
          
     '''
     
-    def __init__(self,thread_size=0,domain="",lock=None,tasks=[]):
+    def __init__(self,father=None,thread_size=0,domain=None,lock=None):
         threading.Thread.__init__(self)  #初始化父类
         self.visited=None    #访问过的集合
         self.pages=None     #采集到的页面
@@ -35,7 +38,7 @@ class master(threading.Thread):
         self.wait_queue=Queue.Queue()  #正在等待的任务组成的队列
         self.lock=lock #设置线程锁
         
-        self.domain=domain #在这个域名范围内爬　
+        self.domain=domain #从服务器拿到的一个domainRecorder实例  
         
         # 为实现任务管理设置的标志位 
         
@@ -46,38 +49,44 @@ class master(threading.Thread):
         
         self.thread_size=thread_size  #设置线程的个数 
         self.task_num=self.thread_size*2     # 设置任务队列的大小
-        self.tasks=tasks  #从服务器端接收到的任务,可能不止一个,是多个起始url 
+        
+        
+        self.tasks=self.domain.getUrl()  #
+        self.father=father   #便于向服务器传输数据  
+        
         self.controler=controler(father=self,lock=self.lock)
         self.task_queue=Queue.Queue(self.task_num)
         self.__init_threads__()
         self.__init__bsddb__()
-        
         self.begin_time=time.time()
         
+        
     def __init__bsddb__(self):
-        print "Create the bsddb!!"
-        print "[^] checking if the bsddb is exist"
+        print "[INFO] Create the bsddb!!"
+        print "[WARNING] Checking if the bsddb is exist"
         if os.path.exists("pages.db"):
-            print "[*] Delete the exist  db!"
+            print "[INFO] Delete the exist  db!"
             os.remove("pages.db")
         if os.path.exists("visited.db"):
-            print "[*] Delete the visited.db"
+            print "[INFO] Delete the visited.db"
             os.remove("visited.db")
         try:
             self.pages=bsddb.btopen(file="pages.db",flag='c')
             self.visited=bsddb.btopen(file="visited.db",flag='c')
-            print "[^] create db success!!"
+            print "[INFO] Create db success!!"
         except:
-            print "Create db error!!"
+            print "[ERROR] Create db error!!"
                    
     def  __init_threads__(self):   #初始化线程,调用worker类,创建工作线程
         for i in range(self.thread_size):
             name="Thread %d"%(i)
-            print name,"is start"
+            print "[INFO] %s is start"%(name)
+            
             substread=worker(father=self,lock=self.lock,name=name)
             substread.start()  #启动子进程
             self.threads.append(substread)
                             
+    
     def begin(self):
         for task in self.tasks:
             self.wait_queue.put(task)
@@ -170,9 +179,8 @@ class master(threading.Thread):
                 print "result".center(197,'+')
                 for i in self.pages:
                     print "URL:",self.pages[i]
-                    
+                                        
                 print time.time()-self.begin_time
-                
                 self.__stop()  
                                    
     def __stop(self):  #结束所有的子线程
@@ -183,4 +191,4 @@ class master(threading.Thread):
             self.start_flag=False
         self.pages.close()
         self.visited.close()
-            
+        

@@ -100,17 +100,16 @@ class DnsBrute(object):
                             
                         if is_wildcard_record:
                             #get a wildcard record   
-                            print "[WARNING] Get a wildcard record ..."
+                            print "[WARNING] Thread-%d Get a wildcard record ..."%(thread_id)
                             continue
                                  
                         ips = ', '.join([answer.address for answer in answers]) #获取响应的地址
                                              
                         if (not self.is_intranet(answers[0].address)): #如果不是内网地址
                             #说明获得了一个子域名  
-                            print "[INFO] Get a subdomain:",cur_sub_domain,ips
+                            print "[INFO] Thread-%d Get a subdomain:"%(thread_id),cur_sub_domain,ips
                             # self.father.response_queue.put()
                             #把子域名压入到父队列中去  
-                            
                             
                             try:
                                 
@@ -135,9 +134,7 @@ class DnsBrute(object):
                     pass
                     
                     
-        self.thread_count-=1
-        
-                            
+        self.thread_count-=1                     
     def run(self):
     
         for i in range(self.threads_num):
