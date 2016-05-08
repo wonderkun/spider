@@ -13,10 +13,10 @@ import time
 import threading 
 import Queue
 import os
-
+from domainRecorder import *
 
 class DnsBrute(object):
-    def __init__(self,rootDomain=None, names_file=None,threads_num=1):
+    def __init__(self,father=None,rootDomain=None, names_file=None,threads_num=1):
         self.rootDomain = rootDomain.strip()  #目标
         self.names_file = "subnames.txt" if names_file==None else names_file  #子域名来源
         self.thread_count = self.threads_num = int(threads_num)  #线程数目   
@@ -27,6 +27,8 @@ class DnsBrute(object):
         self._load_next_sub()  #载入三级域名  
         self.ip_dict = {}
         self.STOP_ME=False
+        self.father=father
+        
         
         
     def _load_dns_servers(self):
@@ -98,14 +100,32 @@ class DnsBrute(object):
                             
                         if is_wildcard_record:
                             #get a wildcard record   
-                            print "get a wildcard record"
+                            print "[WARNING] Get a wildcard record ..."
                             continue
                                  
                         ips = ', '.join([answer.address for answer in answers]) #获取响应的地址
                                              
                         if (not self.is_intranet(answers[0].address)): #如果不是内网地址
                             #说明获得了一个子域名  
-                            print cur_sub_domain,ips
+                            print "[INFO] Get a subdomain:",cur_sub_domain,ips
+                            # self.father.response_queue.put()
+                            #把子域名压入到父队列中去  
+                            
+                            
+                            try:
+                                
+                                subdomain=domainRecorder(rootDomain=self.rootDomain,domain=cur_sub_domain,isSubDomain=True)
+                                subdomain.printSelf()                                 
+                            except Exception,e:
+                                print e
+                                
+                            if subdomain.judgeDomain():  #如果是子域名
+                                self.father.response_queue.put(subdomain)
+                            else:
+                                
+                                print "[Error] %s isn't a subdomain of %s"%(cur_sub_domain,self.rootDomain)
+                                
+                                
                             for i in self.next_subs:   
                                 self.queue.put(i + '.' + sub)
                         break    
@@ -114,8 +134,10 @@ class DnsBrute(object):
                 except Exception, e:
                     pass
                     
-        self.thread_count-=1
                     
+        self.thread_count-=1
+        
+                            
     def run(self):
     
         for i in range(self.threads_num):
@@ -137,6 +159,5 @@ class DnsBrute(object):
 if __name__=="__main__":
 
     a=DnsBrute(rootDomain="baidu.com")
-    
     a.run()
     
