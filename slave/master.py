@@ -17,7 +17,6 @@ import hashlib
 from domainRecorder import *  
 
 
-
 class master(threading.Thread):
     '''
     这是clinet端的多线程任务管理类,负责多线程任务的分发和回收 
@@ -39,6 +38,7 @@ class master(threading.Thread):
         self.lock=lock #设置线程锁
         
         self.domain=domain #从服务器拿到的一个domainRecorder实例  
+        self.rootDomain=self.domain.rootDomain
         
         # 为实现任务管理设置的标志位 
         
@@ -51,7 +51,7 @@ class master(threading.Thread):
         self.task_num=self.thread_size*2     # 设置任务队列的大小
         
         
-        self.tasks=self.domain.getUrl()  #
+        self.task=self.domain.getUrl()  #
         self.father=father   #便于向服务器传输数据  
         
         self.controler=controler(father=self,lock=self.lock)
@@ -62,34 +62,38 @@ class master(threading.Thread):
         
         
     def __init__bsddb__(self):
-        print "[INFO] Create the bsddb!!"
-        print "[WARNING] Checking if the bsddb is exist"
+        print "[%s] [INFO] Create the bsddb!!"%(self.__time())
+        print "[%s] [WARNING] Checking if the bsddb is exist"%(self.__time())
         if os.path.exists("pages.db"):
-            print "[INFO] Delete the exist  db!"
+            print "[%s] [INFO] Delete the exist  db ..."%(self.__time())
             os.remove("pages.db")
         if os.path.exists("visited.db"):
-            print "[INFO] Delete the visited.db"
+            print "[%s] [INFO] Delete the visited.db ..."%(self.__time())
             os.remove("visited.db")
         try:
             self.pages=bsddb.btopen(file="pages.db",flag='c')
             self.visited=bsddb.btopen(file="visited.db",flag='c')
-            print "[INFO] Create db success!!"
+            print "[%s] [INFO] Create db success!!"%(self.__time())
         except:
-            print "[ERROR] Create db error!!"
+            print "[%s] [ERROR] Create db error!!"%(self.__time())
                    
     def  __init_threads__(self):   #初始化线程,调用worker类,创建工作线程
         for i in range(self.thread_size):
             name="Thread %d"%(i)
-            print "[INFO] %s is start"%(name)
+            print "[%s] [INFO] %s is start"%(self.__time(),name)
             
             substread=worker(father=self,lock=self.lock,name=name)
             substread.start()  #启动子进程
             self.threads.append(substread)
-                            
+    
+    def __time(self):
+        return  time.strftime("%H:%M:%S",time.localtime(time.time()))
+                           
     def begin(self):
         # for task in self.tasks:
-        self.wait_queue.put(task)
-        self.add_pages(task)
+        self.wait_queue.put(self.task)
+        self.add_pages(self.task)
+            
             
         if self.is_running!=True:
             #启动标志位置位 
@@ -149,7 +153,7 @@ class master(threading.Thread):
             
         '''
         while self.start_flag:
-            print "\033[49;34mI am master!!\033[0m"
+            print "[%s] [INFO] I am master , I am running .... "%(self.__time())
              
             k=0
             for thread  in self.threads:
@@ -163,22 +167,23 @@ class master(threading.Thread):
                 self.finished_all=False
                                                     
             while self.task_queue.full()!=True:   #如果任务队列没满,就从等待队列中拷入数据
+                
                 if self.wait_queue.qsize()<=0:
-                    print "[*] wait_queue is empty!!"
+                    print "[%s] [INFO] Wait_queue is empty ..."%(self.__time())
                     time.sleep(0.8)       
                     break
                 url_tmp=self.wait_queue.get()
                 self.task_queue.put(url_tmp)
             else:
-                print "[INFO] Task_queue is full,I am waiting ..."
+                print "[%s] [INFO] Task_queue is full,I am waiting ..."%(self.time())
                 time.sleep(0.8)
                                             
             if (self.finished_all==True) and (self.dead_all==True):
-                
+            
                 print "result".center(197,'+')
                 for i in self.pages:
                     print "URL:",self.pages[i]
-                                        
+                                 
                 print time.time()-self.begin_time
                 self.__stop()  
                                    

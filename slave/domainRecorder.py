@@ -114,6 +114,7 @@ class domainRecorder():
         if path=="":
             path="/"
             
+            
         path=path.split('/')
         
         if path[-1]=="": 

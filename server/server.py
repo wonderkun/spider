@@ -18,8 +18,7 @@ from threading import Timer
 
 class TaskManager(BaseManager):
     '''
-       这个类的作用 
-       
+       这个类的作用   
        1.控制开启子域名爆破模块,可以设置爆破子域名的线程数 
        2.在8000端口开启httpserver,供客户端连接,加载执行代码 
        3.基于BaseManager,在本地的6666端口,开启分布式结构,连接密码默认是123456

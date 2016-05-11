@@ -6,6 +6,7 @@ import sys
 import Queue
 from multiprocessing.managers import BaseManager
 import random
+
 from domainRecorder import *
 from  master import *  
 
@@ -64,6 +65,10 @@ class client(BaseManager):
                     domain=self.task_queue.get()
                     domain.printSelf()
                     
+                    lock=threading.RLock()
+                    a=master(thread_size=10,domain=domain,lock=lock)
+                    a.begin()
+                    
                 else:
                     print "[%s] [INFO] I am waiting for task ..."%(self.__time())
                     self.times+=1 
@@ -71,8 +76,7 @@ class client(BaseManager):
                     if(self.times==5):   
                         self.Runable=False 
             except KeyboardInterrupt,e:
-                
-                print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self._time())
+                print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self.__time())
                 self.Runable=False 
                 
             except Exception,e:
