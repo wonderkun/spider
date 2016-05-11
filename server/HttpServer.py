@@ -11,6 +11,8 @@ import cgi
 import sys
 import shutil
 import mimetypes
+import time  
+
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -18,12 +20,13 @@ except ImportError:
 
 
 class HttpServer(BaseHTTPServer.HTTPServer):
-    pass  
-    
 
+    def  Time(self):   #格式化输出时间 
+        return time.strftime("%H:%M:%S",time.localtime(time.time())) 
+        
     
 class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
-
+    
     def do_GET(self):
         """Serve a GET request."""
         # print self.headers
@@ -173,12 +176,11 @@ def HttpServer(HandlerClass = HttpServerHandle,ServerClass = HttpServer):
     httpd=ServerClass(server_address,HandlerClass)
     
     sa = httpd.socket.getsockname()
-    print "Serving HTTP on", sa[0], "port", sa[1], "..."
+    print "[%s] [INFO] Serving HTTP on %s port %d  ..."%(httpd.Time(),sa[0],sa[1])
+    
     httpd.serve_forever()
     
     # httpd.stop_server()
-    
-    
     
     
     

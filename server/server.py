@@ -8,7 +8,7 @@ from multiprocessing.managers import BaseManager
 import random
 
 
-from domainRecorder import *
+from   domainRecorder import *
 from HttpServer import *
 from  DnsBrute import * 
 import threading 
@@ -51,6 +51,10 @@ class TaskManager(BaseManager):
         self.threads_num=threads_num #爆破子域名的线程数 
         self.domain=domainRecorder(rootDomain=rootDomain,domain=rootDomain,path='/',isSubDomain=True)
         
+    
+    def __time(self):   #格式化输出时间 
+    
+        return time.strftime("%H:%M:%S",time.localtime(time.time()))   
         
     def __digSubDomain(self):
         
@@ -74,10 +78,11 @@ class TaskManager(BaseManager):
         self.response_queue.put(self.domain)
         
     def __print_self(self):
-        print "[*] Http server starting on %s:%d  ..."%(self.address[0],8000)
-        print "[*] Start Server on %s:%d  ..."%(self.address[0],self.port)
-        print "[*] Server authkey is %s"%(self.authkey)
-        print "[*] To get help information,please visite %s:%d"%(self.address[0],8000)
+        
+        print "[%s] [*] Http server starting on %s:%d  ..."%(self.__time(),self.address[0],8000)
+        print "[%s] [*] Start Server on %s:%d  ..."%(self.__time(),self.address[0],self.port)
+        print "[%s] [*] Server authkey is %s"%(self.__time(),self.authkey)
+        print "[%s] [*] To get help information,please visite %s:%d"%(self.__time(),self.address[0],8000)
         print "\n"
         
     def __start_httpserver(self):
@@ -91,9 +96,8 @@ class TaskManager(BaseManager):
         # time.sleep(self.delay)
         if self.response_queue.empty()==True:
             self.count+=1
-            print "[INFO] I am delaying,  %ds..."%(self.delay)    
+            print "[%s] [INFO] I am delaying,  %ds..."%(self.__time(),self.delay)    
             return 
-        
         # self.__printTaskQueue()  #打印出来任务队列 
         
         
@@ -128,7 +132,7 @@ class TaskManager(BaseManager):
                 self.START_FLAG=False
                 if self.digSubDomain:
                     self.DnsBrute.STOP_ME=True     
-                print "[WARNING] User aborted, wait all slave threads to exit..."
+                print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self.__time())
                 # 
                 self.shutdown_work()
                 
@@ -149,7 +153,7 @@ if __name__=="__main__":
     p.add_argument('--port',default=6666,type=int,action="store",help="The port to start the server")
     p.add_argument('domain',type=str,action="store",help="The domain to craw")
     p.add_argument('--authkey',action='store',type=str,default=b'123456',help="The authkey to connect to the server")
-    p.add_argument('-i',action="store_true",help="Weather to craw subdomain")
+    p.add_argument('-i',action="store_true",help="Whether to craw subdomain")
     p.add_argument('-T',action="store",type=int,default=10,help="The thread to burte subdomain")
     args=p.parse_args() 
     

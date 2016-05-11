@@ -86,11 +86,10 @@ class master(threading.Thread):
             substread.start()  #启动子进程
             self.threads.append(substread)
                             
-    
     def begin(self):
-        for task in self.tasks:
-            self.wait_queue.put(task)
-            self.add_pages(task)
+        # for task in self.tasks:
+        self.wait_queue.put(task)
+        self.add_pages(task)
             
         if self.is_running!=True:
             #启动标志位置位 
@@ -145,13 +144,13 @@ class master(threading.Thread):
         '''
         1.分配任务,
         2.保护任务队列
-        
         标志位self.dead_all   控制mater的结束,  
         self.dead_all 是由子线程controler类来控制的 
             
         '''
         while self.start_flag:
             print "\033[49;34mI am master!!\033[0m"
+             
             k=0
             for thread  in self.threads:
                 if thread.start_flag==False:
@@ -171,7 +170,7 @@ class master(threading.Thread):
                 url_tmp=self.wait_queue.get()
                 self.task_queue.put(url_tmp)
             else:
-                print "[*] task_queue is full,I am waiting!!"
+                print "[INFO] Task_queue is full,I am waiting ..."
                 time.sleep(0.8)
                                             
             if (self.finished_all==True) and (self.dead_all==True):

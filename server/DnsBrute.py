@@ -30,7 +30,10 @@ class DnsBrute(object):
         self.father=father
         
         
-        
+    
+    def __time(self):
+        return time.strftime("%H:%M:%S",time.localtime(time.time())) 
+                
     def _load_dns_servers(self):
         dns_servers = []
         with open('./dict/dns_servers.txt') as f:
@@ -100,14 +103,14 @@ class DnsBrute(object):
                             
                         if is_wildcard_record:
                             #get a wildcard record   
-                            print "[WARNING] Thread-%d Get a wildcard record ..."%(thread_id)
+                            print "[%s] [WARNING] Thread-%d Get a wildcard record ..."%(self.__time(),thread_id)
                             continue
                                  
                         ips = ', '.join([answer.address for answer in answers]) #获取响应的地址
                                              
                         if (not self.is_intranet(answers[0].address)): #如果不是内网地址
                             #说明获得了一个子域名  
-                            print "[INFO] Thread-%d Get a subdomain:"%(thread_id),cur_sub_domain,ips
+                            print "[%s] [INFO] Thread-%d Get a subdomain:"%(self.__time(),thread_id),cur_sub_domain,ips
                             # self.father.response_queue.put()
                             #把子域名压入到父队列中去  
                             
@@ -122,7 +125,7 @@ class DnsBrute(object):
                                 self.father.response_queue.put(subdomain)
                             else:
                                 
-                                print "[Error] %s isn't a subdomain of %s"%(cur_sub_domain,self.rootDomain)
+                                print "[%s] [ERROR] %s isn't a subdomain of %s"%(self.__time(),cur_sub_domain,self.rootDomain)
                                 
                                 
                             for i in self.next_subs:   
@@ -147,7 +150,7 @@ class DnsBrute(object):
                 time.sleep(1.0)
             except KeyboardInterrupt,e:
                 self.STOP_ME=True
-                msg = '[WARNING] User aborted, wait all slave threads to exit...'
+                msg = '[%s] [WARNING] User aborted, wait all slave threads to exit...'%(self.__time())
                 print msg
 
 

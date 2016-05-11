@@ -25,6 +25,10 @@ class client(BaseManager):
       
       
     '''    
+    
+    def __time(self):
+        return  time.strftime("%H:%M:%S",time.localtime(time.time()))
+        
     def __init__(self,server_addr='127.0.0.1',server_port=6666,authkey=b'123456'):
     
         BaseManager.__init__(self,address=(server_addr,server_port), authkey=authkey)
@@ -35,13 +39,13 @@ class client(BaseManager):
         self.register('task_queue_n')
         self.register('response_queue_n')
         
-        print'[INFO] Connect to server %s...' %(server_addr)
+        print'[%s] [INFO] Connect to server %s...' %(self.__time(),server_addr)
         try:
             self.connect()
         except Exception,e:
-            print "[ERROR] Connect to server error , please confirm ip,port and authkey ..."
+            print "[%s] [ERROR] Connect to server error , please confirm ip,port and authkey ..."%(self.__time())
             exit(0)
-                    
+            
         self.task_queue = self.task_queue_n()
         self.response_queue = self.response_queue_n()
         self.Runable=True 
@@ -61,14 +65,14 @@ class client(BaseManager):
                     domain.printSelf()
                     
                 else:
-                    print "[INFO] I am waiting for task ..."
+                    print "[%s] [INFO] I am waiting for task ..."%(self.__time())
                     self.times+=1 
                     time.sleep(2)
                     if(self.times==5):   
                         self.Runable=False 
             except KeyboardInterrupt,e:
                 
-                print "[WARNING] User aborted, wait all slave threads to exit..."
+                print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self._time())
                 self.Runable=False 
                 
             except Exception,e:

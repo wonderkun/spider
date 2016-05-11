@@ -6,6 +6,9 @@ import threading
 import time 
 import Queue
 
+from comm import  domainRecorder  
+
+
 
 class controler(threading.Thread):
     def __init__(self,father=None,lock=None):
@@ -27,7 +30,7 @@ class controler(threading.Thread):
                 else:
                     i=0
                         
-            print "[*] I am controler!!"
+            print "[INFO] I am controler!!"
             
             for thread in self.father.threads:
                 # self.lock.acquire()           #读取子进程获取的url到父进程中来
@@ -44,7 +47,12 @@ class controler(threading.Thread):
                         count=0
                     print "[*] "+thread.name+ " not return pages"
                 # self.lock.release()
-                                     
+    def __judgePath(self,page):   #判断跟父线程发布的任务的域名关系和路径关系  
+        
+        domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
+        pass
+        
+                                              
     def stop(self):
         if self.alive!=False:
             self.alive=False

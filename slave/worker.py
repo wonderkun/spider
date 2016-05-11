@@ -17,6 +17,9 @@ class worker(threading.Thread):
      获取匹配页面中的url,找到合法的,返回给master 
      
     '''
+    
+    
+    
     def __init__(self, group=None, target=None, name=None, args=(),kwargs=None, verbose=None, father=None, lock=None):
         #  __init__(self, group=None, target=None, name=None, args=(), kwargs=None, verbose=None) #父类的初始化函数 
         threading.Thread.__init__(self)
@@ -33,18 +36,18 @@ class worker(threading.Thread):
         self.is_runable=True 
         # self.ignore=['png','jpg','bmp','gif','jpeg','ico','doc','ppt','pdf','xls','avi','flv','mp3','mp4','rmvb','wav','wmv','wav']  #此类文件不进行解析 
         self.ignore=[]
-    def run(self):
     
+    def run(self):
         while self.is_runable:
-            print self.name +" is  running!!"
+            print "[%s] [INFO] %s is  running ..."%(self.__time(),self.name)
+                
             try:
                 self.url=self.father.task_queue.get(block=True,timeout=3)
             except Exception as e:
                 self.url=""
-                
+                                
             if self.url=="":       #如果说自己没有获得url 
-                
-                print "\033[49;35m[*]{name} Get url failed!!\033[0m".format(name=self.name)
+                print "\033[49;35m[{time}] [WARNING] {name} Get url failed!!\033[0m".format(time=self.__time(),name=self.name)
                 continue 
             else:
                 # self.start_flag=True
@@ -56,14 +59,21 @@ class worker(threading.Thread):
                 # print self.name,"get url:"+self.url
                 time1=time.time()
                 self.get_url(url=self.url)  #调用函数,把这个页面的数据存储到self.temp_pages中去
-                print self.name,"finished url:"+self.url,"time:",time.time()-time1
+                
+                print "[%s] [INFO] %s finished url:%s,spend time:%s",(self.__time(),self.name,self.url,time.time()-time1)
+                
                 self.pages+=self.temp_pages  #把url放入pages中去,父进程从pages中取走数据                
                 self.temp_pages=[]  #清空临时表 
                 self.father.add_visited(self.url)
                 #每次完成一个任务,这两个标志位置位                    
                 self.start_flag=False
                 self.finished_flag=True
-                    
+                
+    
+    
+    def __time(self):
+        return  time.strftime("%H:%M:%S",time.localtime(time.time()))
+    
     def get_url(self,url=''):
         if url=='':
             return 
@@ -143,29 +153,31 @@ class worker(threading.Thread):
                 # print "bad url "+ret
                 continue 
                #对域名进性检查   
-            if self.father.domain not in  res[1]:
-                # print "bad url "+ret 
+            if self.father.domain.rootDomain not in  res[1]:  #没有对子域名进行过滤
+                # print "bad url "+ret
                 continue
             #对文件进行过滤,删除 图片 音频 视频 文档 等
             ext=res[2]
             if ext[ext.rfind('.')+1:ext.rfind('.')+4] in self.ignore:  #获取扩展名
                 continue
-                                                         
+                                                                
             newpage=ret
             newpage_flag=False
             self.lock.acquire()
             
-            if (newpage not in self.father.pages) and (newpage not in self.temp_pages):
+            if (newpage not in self.pages) and (newpage not in self.temp_pages):
                 # print "find new page :"+newpage
+                print "[%s] [INFO] %s find new page:%s"%(self.__time(),self.name,newpage)
+                
                 self.temp_pages.append(newpage)   #子进程把数据放在列表的最后,父进程从列表的最前面开始取走
                 newpage_flag=True
             else:
                 pass 
                 
             self.lock.release()
-        
+            
     def stop(self):
         if self.is_runable!=False:
             self.is_runable=False
-        
-                       
+            
+            
