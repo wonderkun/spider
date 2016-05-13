@@ -78,6 +78,7 @@ class worker(threading.Thread):
         pages=set()  #存储获得的url 
         newpage_flag=False 
         
+        
         data=""
         header={"Referer":domain,"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.75 Safari/537.36",
                "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp","Accept-Encoding":"*"}
@@ -158,19 +159,17 @@ class worker(threading.Thread):
                 continue
                                                                 
             newpage=ret
-            newpage_flag=False
-            self.lock.acquire()
-            
+            newpage_flag=False 
             if (newpage not in self.pages) and (newpage not in self.temp_pages):
                 # print "find new page :"+newpage
-                print "[%s] [INFO] %s find new page:%s"%(self.__time(),self.name,newpage)
-                
                 self.temp_pages.append(newpage)   #子进程把数据放在列表的最后,父进程从列表的最前面开始取走
                 newpage_flag=True
-            else:
+            else:                
                 pass 
-                
-            self.lock.release()
+            
+            print "[%s] [INFO] %s find new page:%s ..."%(self.__time(),self.name,(',').join([x for x in self.temp_pages])[:100])
+            
+            
             
     def stop(self):
         if self.is_runable!=False:

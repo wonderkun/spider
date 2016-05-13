@@ -44,11 +44,14 @@ class domainRecorder():
 
 
     def printSelf(self):
+    
         if self.isSubDomain:  #获取了subdomain 
             print "[%s] [INFO] Get  subdomain:[%s],RootDomain:[%s],Num:[%d]"%(self.__time(),self.domain,self.rootDomain,self.count)
         else:
-            print "[%s] [INFO] Get path:[%s],in subdomain:[%s],in RootDomain:[%s],Num:[%d]"(self.__time(),self.path,self.subdomain,self.rootDomain,self.count)
-
+                    
+            print "[%s] [INFO] Get path:[%s],in subdomain:[%s],in RootDomain:[%s],Num:[%d]"%(self.__time(),self.path,self.domain,self.rootDomain,self.count)
+    
+            
     def judgeDomain(self):  #判断是否是一个子域名 
     
         domain_list=self.domain.split('.')
@@ -65,24 +68,26 @@ class domainRecorder():
             if self.domain!=self.rootDomain:
                 return False
         return True
-        
-        
 
 
     def __eq__(self,other):    #重载== 号运算符,判断两个url是否是在同一个目录下,简单的,就判定了一级目录  
-    
-        if self.path=='/' or other.path=='/':   # 如果任意一个url是根目录,就返回false
-            return False      
+        
+        if (self.path=='/') or (other.path=='/'):      # 如果任意一个url是根目录,就返回false
+            if (self.path!="/") or (other.path!='/'):
+                
+                return False
+                        
         if self.domain==other.domain:
             path1=[]
             path2=[] 
             
-            
             path_tmp1=self.path.split('/')
+            
             for i in path_tmp1:
                 if 1!='':
                     path1.append(i)
             path_tmp2=other.path.split('/')
+            
             for i in path_tmp2:
                 if 1!='':
                     path2.append(i)
@@ -90,26 +95,24 @@ class domainRecorder():
                 return True     
         return False
         
-                     
+        
     def  getUrl(self):  #返回此条记录的url
-    
+         
         url=urlparse.urljoin(self.scheme+"://"+self.domain,self.path)
         url=url.rstrip('/')+"/"  #必须用/结尾  
         return url  
     
+    
     def reInit(self,url): #用一个url来重新初始化此类  
         
         url=urlparse.urlparse(url)
-        
-        removeNum=-1  
-        
+        removeNum=-1 
         self.scheme=url.scheme
         self.domain=url.netloc 
         
         if (self.rootDomain!=self.domain) and (self.judgeDomain):
             self.isSubDomain=True  
         
-            
         path=url.path
         if path=="":
             path="/"
@@ -117,7 +120,7 @@ class domainRecorder():
             
         path=path.split('/')
         
-        if path[-1]=="": 
+        if path[-1]=="":
             maybeFile=path[-2]
             removeNum=-2
         else:
@@ -127,24 +130,25 @@ class domainRecorder():
         if "." in maybeFile:
             #说明最后一个是文件名  
             # print removeNum
-            self.path=('/').join(path.pop(removeNum))
+            path[removeNum]=""        
+            self.path=('/').join(path)
+            
         else:
             self.path=('/').join(path)
             
+        while "//" in self.path: 
+            self.path=self.path.replace("//",'/')  #把url中的//变为/
+        
 if  __name__=='__main__':
-   while True:
+    while True:
+    
         a=domainRecorder(rootDomain='baidu.com')
-        # b=domainRecorder(rootDomain='baidu.com')
-        urla=raw_input("a:")
-        # urlb=raw_input("b:")
+        url=raw_input(':')
         
-        a.reInit(urla)
+        a.reInit(url)
         
-        # b.reInit(urla)
+        print a.getUrl()
         
-        # print a==b
         
-            
-    
-    
-    
+        
+           

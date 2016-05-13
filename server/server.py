@@ -30,6 +30,7 @@ class TaskManager(BaseManager):
     '''
     
     def __init__(self,address='127.0.0.1',port=6666,authkey='',rootDomain='',digSubDomain=False,threads_num=1):
+        
         BaseManager.__init__(self,(address,int(port)),authkey)
         task_queue_n=Queue.Queue()
         response_queue_n=Queue.Queue()
@@ -39,7 +40,10 @@ class TaskManager(BaseManager):
         self.authkey=authkey
         self.register('task_queue_n',callable=lambda:task_queue_n)
         self.register('response_queue_n',callable=lambda:response_queue_n)
-
+         
+        self.tasks=[]  #记录自己已经访问过的域名,或者路径 
+        
+        
         self.digSubDomain=digSubDomain
         self.DnsThread=None 
         self.httpserverThread=None         
@@ -50,7 +54,7 @@ class TaskManager(BaseManager):
         self.threads_num=threads_num #爆破子域名的线程数 
         self.domain=domainRecorder(rootDomain=rootDomain,domain=rootDomain,path='/',isSubDomain=True)
         
-    
+        
     def __time(self):   #格式化输出时间 
     
         return time.strftime("%H:%M:%S",time.localtime(time.time()))   
@@ -67,6 +71,7 @@ class TaskManager(BaseManager):
         self.start()
         self.task_queue=self.task_queue_n()
         self.response_queue=self.response_queue_n()
+        
         # self.task_queue.put(self.domain)
         
         if self.digSubDomain:  #开启子域名爆破模块 
@@ -95,15 +100,19 @@ class TaskManager(BaseManager):
         # time.sleep(self.delay)
         if self.response_queue.empty()==True:
             self.count+=1
-            print "[%s] [INFO] I am delaying,  %ds..."%(self.__time(),self.delay)    
+            print "[%s] [INFO] I am delaying,  %ds..."%(self.__time(),self.delay)
+               
             return 
         # self.__printTaskQueue()  #打印出来任务队列 
         
-        
         self.count=0    
         domain=self.response_queue.get()
-        domain.printSelf()
-        self.task_queue.put(domain)
+        
+        if domain not in self.tasks:  #去除重复  
+            
+            domain.printSelf()
+            self.tasks.append(domain)
+            self.task_queue.put(domain)
         
         
     def  __printTaskQueue(self):
@@ -122,8 +131,10 @@ class TaskManager(BaseManager):
               
         print "[INFO] This is task_queue ",listdomain
                  
+                 
     def pushTask(self):
         self.count=0
+        
         while self.START_FLAG:
             try:
                 time.sleep(self.delay)
@@ -138,6 +149,8 @@ class TaskManager(BaseManager):
             else:
                   # 运行二进制指数退避算法   
                 self.delay=random.randint(0,2**self.count)
+                # self.delay=1
+                
                 self.__push_task()
             # time.sleep(1)
             
@@ -155,6 +168,7 @@ if __name__=="__main__":
     p.add_argument('-i',action="store_true",help="Whether to craw subdomain")
     p.add_argument('-T',action="store",type=int,default=10,help="The thread to burte subdomain")
     args=p.parse_args() 
+    
     
     #start server 
             

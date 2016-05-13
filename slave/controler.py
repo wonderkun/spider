@@ -19,17 +19,15 @@ class controler(threading.Thread):
     def __time(self):
         return time.strftime("%H:%M:%S",time.localtime(time.time()))
         
-             
+        
     def run(self):
         i=0 
         
         while self.alive:
             # print len(self.father.visited),len(self.father.pages)
             
-                
-            print "[%s] [INFO] I am controler!!"%(self.__time())
-                        
             print "[%s] [INFO] visited:%d,unvisited:%s ..."%(self.__time(),len(self.father.visited),len(self.father.pages))
+            
             if len(self.father.visited)==len(self.father.pages):
                 if self.father.task_queue.qsize()==0 and self.father.wait_queue.qsize()==0:
                     i+=1
@@ -37,7 +35,6 @@ class controler(threading.Thread):
                         self.father.dead_all=True
                 else:
                     i=0
-            
             count=0
             
             for thread in self.father.threads:
@@ -59,10 +56,15 @@ class controler(threading.Thread):
                         
                             print "[%s] [INFO] %s is not in same directory or domain with master ..." %(self.__time(),page)
                             try:    
-                                self.father.father.task_queue.put(page)
+                                
+                                domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
+                                domainTmp.reInit(page)
+                                
+                                self.father.father.response_queue.put(domainTmp)
                             except Exception,e:
                                 print e     
-                                          
+                
+                
                 else:
                     count=count+1
                     if count==len(self.father.threads): #说明所有的页面都没有返回 pages
@@ -70,12 +72,12 @@ class controler(threading.Thread):
                         count=0                        
                     print "[%s] [WARNING]  %s is  not return pages ..."%(self.__time(),thread.name)
                 # self.lock.release()
+                
     def __judgePath(self,page):   #判断跟父线程发布的任务的域名关系和路径关系  
         
         domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
-        
         domainTmp.reInit(page)  #重新初始化 
-         
+        
         if domainTmp==self.father.domain:
             return True 
         return False 

@@ -2,6 +2,7 @@
 #-*-coding:utf-8-*-
 
 
+
 import threading
 import time 
 import Queue 
@@ -28,7 +29,7 @@ class master(threading.Thread):
          4.控制线程的个数
          
     '''
-    
+        
     def __init__(self,father=None,thread_size=0,domain=None,lock=None):
         threading.Thread.__init__(self)  #初始化父类
         self.visited=None    #访问过的集合
@@ -71,8 +72,10 @@ class master(threading.Thread):
             print "[%s] [INFO] Delete the visited.db ..."%(self.__time())
             os.remove("visited.db")
         try:
+            
             self.pages=bsddb.btopen(file="pages.db",flag='c')
             self.visited=bsddb.btopen(file="visited.db",flag='c')
+            
             print "[%s] [INFO] Create db success!!"%(self.__time())
         except:
             print "[%s] [ERROR] Create db error!!"%(self.__time())
@@ -83,6 +86,9 @@ class master(threading.Thread):
             print "[%s] [INFO] %s is start"%(self.__time(),name)
             
             substread=worker(father=self,lock=self.lock,name=name)
+            
+            # substread.setDaemon(True)  #设置为伴随进程 
+            
             substread.start()  #启动子进程
             self.threads.append(substread)
     
@@ -100,7 +106,10 @@ class master(threading.Thread):
             self.start_flag=True
             self.is_running=True  
             self.start()
+            # self.controler.setDaemon(True)
             self.controler.start()
+            
+            
     def check_url(self,url=""):
         if url!="":
             self.md5hash=hashlib.md5()
@@ -150,12 +159,13 @@ class master(threading.Thread):
         2.保护任务队列
         标志位self.dead_all   控制mater的结束,  
         self.dead_all 是由子线程controler类来控制的 
-            
+        
         '''
         while self.start_flag:
             print "[%s] [INFO] I am master , I am running .... "%(self.__time())
              
             k=0
+            
             for thread  in self.threads:
                 if thread.start_flag==False:
                     k+=1
@@ -175,17 +185,22 @@ class master(threading.Thread):
                 url_tmp=self.wait_queue.get()
                 self.task_queue.put(url_tmp)
             else:
-                print "[%s] [INFO] Task_queue is full,I am waiting ..."%(self.time())
+                print "[%s] [INFO] Task_queue is full,I am waiting ..."%(self.__time())
                 time.sleep(0.8)
-                                            
+                
+                
+                
+                                
             if (self.finished_all==True) and (self.dead_all==True):
-            
-                print "result".center(197,'+')
+                
                 for i in self.pages:
-                    print "URL:",self.pages[i]
-                                 
+                    self.father.urls.append(self.pages[i])
+                
+                
                 print time.time()-self.begin_time
+                
                 self.__stop()  
+                
                                    
     def __stop(self):  #结束所有的子线程
         for thread in self.threads:
