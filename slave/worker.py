@@ -36,9 +36,10 @@ class worker(threading.Thread):
         self.ignore=[]
     
     def run(self):
+    
         while self.is_runable:
             print "[%s] [INFO] %s is  running ..."%(self.__time(),self.name)
-                
+            
             try:
                 self.url=self.father.task_queue.get(block=True,timeout=3)
             except Exception as e:
@@ -61,11 +62,13 @@ class worker(threading.Thread):
                 print "[%s] [INFO] %s finished url:%s,spend time:%s"%(self.__time(),self.name,self.url,time.time()-time1)
                 
                 self.pages+=self.temp_pages  #把url放入pages中去,父进程从pages中取走数据                
+                print "[%s] [INFO] %s find new page:%s ..."%(self.__time(),self.name,(',').join([x for x in self.temp_pages])[:100])
                 self.temp_pages=[]  #清空临时表 
                 self.father.add_visited(self.url)
                 #每次完成一个任务,这两个标志位置位                    
                 self.start_flag=False
                 self.finished_flag=True
+                
                 
     def __time(self):
         return  time.strftime("%H:%M:%S",time.localtime(time.time()))
@@ -167,7 +170,7 @@ class worker(threading.Thread):
             else:                
                 pass 
             
-            print "[%s] [INFO] %s find new page:%s ..."%(self.__time(),self.name,(',').join([x for x in self.temp_pages])[:100])
+            
             
             
             
