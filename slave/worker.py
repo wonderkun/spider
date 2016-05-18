@@ -59,7 +59,7 @@ class worker(threading.Thread):
                 time1=time.time()
                 self.get_url(url=self.url)  #调用函数,把这个页面的数据存储到self.temp_pages中去
                 
-                print "[%s] [INFO] %s finished url:%s,spend time:%s"%(self.__time(),self.name,self.url,time.time()-time1)
+                print "[%s] [INFO] %s finished url:%s , spend time:%s"%(self.__time(),self.name,self.url,time.time()-time1)
                 
                 self.pages+=self.temp_pages  #把url放入pages中去,父进程从pages中取走数据                
                 print "[%s] [INFO] %s find new page:%s ..."%(self.__time(),self.name,(',').join([x for x in self.temp_pages])[:100])
@@ -82,9 +82,11 @@ class worker(threading.Thread):
         newpage_flag=False 
         
         
+        
         data=""
         header={"Referer":domain,"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.75 Safari/537.36",
                "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp","Accept-Encoding":"*"}
+        
         while True:
             try:
                 response=requests.get(url,headers=header,timeout=3)
@@ -104,9 +106,10 @@ class worker(threading.Thread):
         for tag in tags:
             try:
                 ret=tag['href']
-            except:
+            except Exception,e:
                 # print self.name+url,"Maybe not have href"
                 continue
+            
             
             res=urlparse.urlparse(ret)
             ret=urlparse.urlunparse((res[0],res[1],res[2],res[3],res[4],'')) #为了删除url中的锚点
@@ -114,15 +117,63 @@ class worker(threading.Thread):
             #修正url 
             if res[0] is '' and res[1] is '':   #如果没有协议和域名,就是相对于当前目录的相对地址 
                 url_split=urlparse.urlparse(url)
-                ret=url_split[0]+"://"+url_split[1]+url_split[2]+ret 
+                
+                #url除去文件名,仅仅留下目录名,就ok了 
+                
+                path=url_split[2]
+                path=path.split('/')
+                
+                if path[-1]=="":
+                    maybeFile=path[-2]
+                    removeNum=-2
+                else:
+                    maybeFile=path[-1]
+                    removeNum=-1
+                
+                if "." in maybeFile:
+                    #说明最后一个是文件名  
+                    # print removeNum
+                    path[removeNum]=""        
+                    path=('/').join(path)
+                    
+                else:
+                    path=('/').join(path)
+                
+                while "//" in path: 
+                    path=path.replace("//",'/')  #把url中的//变为/
+                
+                path=path.rstrip('/')+'/'  #确保url使用/结尾的  
+                
+                ret=url_split[0]+"://"+url_split[1]+path+ret 
+                
                 ret=ret[:8]+ret[8:].replace("//",'/')  #把url中的//变为/
                 res=urlparse.urlparse(ret)
-                #  防止 http://domain/dir/../dir/   出现在url中 
                 
+                paths=res[2].split('/')
+                        
+                
+                #防止url出现  http://test.com/./test.html
+                
+                for i in range(len(paths)):
+                    if '.'==paths[i]:
+                        paths[i]=""
+                    
+                temp_path=''
+                
+                for path in paths:
+                    if path=='':
+                        continue
+                    temp_path=temp_path+"/"+path
+                
+                ret=ret.replace(res[2],temp_path)
+                res=urlparse.urlparse(ret)  #重新分解
+                
+                
+                #  防止 http://domain/dir/../dir/   出现在url中    
                 if "../" in res[2]:
                     paths=res[2].split('/')
-                    
                     for i in range(len(paths)):
+                            
                         if ".."  in  paths[i]:     
                             paths[i]=""
                             t=i
@@ -133,6 +184,7 @@ class worker(threading.Thread):
                                     paths[t]=""    
                                     break                                      
                     temp_path=''
+                    
                     for path in paths:
                         if path=='':
                             continue
@@ -141,7 +193,7 @@ class worker(threading.Thread):
                     ret=ret.replace(res[2],temp_path)  #替换掉原来中的错误部分 
                 res=urlparse.urlparse(ret)  #重新分解            
                 
-            #对协议进行过滤　
+                    #对协议进行过滤　
             
             
             if  'http' not in res[0]:
@@ -163,8 +215,10 @@ class worker(threading.Thread):
                                                                 
             newpage=ret
             newpage_flag=False 
+            
             if (newpage not in self.pages) and (newpage not in self.temp_pages):
-                # print "find new page :"+newpage
+                # print "@"*100,"find new page :"+newpage
+                
                 self.temp_pages.append(newpage)   #子进程把数据放在列表的最后,父进程从列表的最前面开始取走
                 newpage_flag=True
             else:                

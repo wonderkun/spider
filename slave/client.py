@@ -69,7 +69,6 @@ class master(threading.Thread,BaseManager):  #多重继承
         self.task_num=self.thread_size*2     # 设置任务队列的大小
         
         
-        
         '''
         初始化服务器连接模块  
         
@@ -110,12 +109,13 @@ class master(threading.Thread,BaseManager):  #多重继承
             print "URL:%s"%(self.pages[i])
         
         print "[%s] [INFO] Spend time %d ..."%(self.__time(),time.time()-self.begin_time)
+        print  "[%s] [INFO] Get count:%s ..."%(self.__time(),len(self.pages))
         
         #关闭数据库对象 
         
         self.pages.close()
         self.visited.close()
-            
+        
             
     def __init__bsddb__(self):
         print "[%s] [INFO] Create the bsddb ..."%(self.__time())
@@ -142,15 +142,15 @@ class master(threading.Thread,BaseManager):  #多重继承
             print "[%s] [INFO] %s is start"%(self.__time(),name)
             
             substread=worker(father=self,lock=self.lock,name=name)
+            substread.setDaemon(True)  #设置为伴随进程
             substread.start()
             
-             # substread.setDaemon(True)  #设置为伴随进程 
+             
             self.threads.append(substread)
     
     def __time(self):
         return  time.strftime("%H:%M:%S",time.localtime(time.time()))
-        
-                     
+    
     def begin(self):
         # for task in self.tasks:
             
@@ -159,9 +159,8 @@ class master(threading.Thread,BaseManager):  #多重继承
             self.start_flag=True
             self.is_running=True  
             self.start()
-            # self.controler.setDaemon(True)
+            self.controler.setDaemon(True)
             self.controler.start()
-            
             
             
     def check_url(self,url=""):
@@ -241,12 +240,7 @@ class master(threading.Thread,BaseManager):  #多重继承
                      self.start_flag=False
                      if(self.times==self.__count):
                         self.Runable=False  
-                     
-                      
-                
-                     
-                    
-                          
+                           
             except KeyboardInterrupt,e:
                 print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self.__time())
                 self.Runable=False 
@@ -285,25 +279,29 @@ class master(threading.Thread,BaseManager):  #多重继承
         
         self.__stop()
         
+        
         # time.sleep(5)
        
-        # time.sleep(2)
+        time.sleep(2)
         # if (self.finished_all==True) and (self.dead_all==True):
         self.__printResult()
         
+        
     def __stop(self):  #结束所有的子线程
+        
         for thread in self.threads:
             thread.stop()
+            thread.join()
+            
         self.controler.stop()          
+        self.controler.join()
         
         if self.start_flag!=False:
             self.start_flag=False
         
-         
-        
-
         
 if __name__=="__main__":
-    a=master(thread_size=10,count=5)
+    a=master(thread_size=10,count=10)
+    
     a.begin()
     

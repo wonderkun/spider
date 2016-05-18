@@ -85,7 +85,6 @@ class TaskManager(BaseManager):
         
         self.response_queue.put(self.domain)
         
-        
     def __print_self(self):
         
         print "[%s] [*] Http server starting on %s:%d  ..."%(self.__time(),self.address[0],8000)
@@ -117,14 +116,11 @@ class TaskManager(BaseManager):
         domainUrl=domain.getUrl()
         
         if domainUrl not in self.tasks:  #去除重复  
-            
-            
+            # domain.printSelf()
             self.domainCount+=1
-            
             self.tasks.append(domainUrl)
             domain.count=self.domainCount
             self.task_queue.put(domain)
-            domain.printSelf()
             
                     
     def  __printTaskQueue(self):
@@ -157,9 +153,10 @@ class TaskManager(BaseManager):
                 print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self.__time())
                 # 
                 self.shutdown_work()
+                
             else:
                   # 运行二进制指数退避算法   
-                self.delay=random.randint(0,int(2**self.count*0.5))
+                self.delay=random.randint(0,2**self.count)
                 # self.delay=1
                 
                 self.__push_task()

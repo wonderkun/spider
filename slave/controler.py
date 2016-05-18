@@ -60,7 +60,11 @@ class controler(threading.Thread):
                                 domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
                                 domainTmp.reInit(page)
                                 
+                                # print "$"*100
+                                # domainTmp.printSelf()
+                                
                                 self.father.server_response_queue.put(domainTmp)
+                                
                             except Exception,e:
                                 print e     
                 
