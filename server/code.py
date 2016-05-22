@@ -13,6 +13,12 @@ try:
 except Exception,e:
     print "Please install bs4 (sudo pip install bs4)"
     exit()
+try:
+    import bsddb
+except Exception,e:
+    print "Please install bsddb (sudo pip install bsddb)"    
+    exit()
+    
     
 for k in sys._getframe(1).f_code.co_consts:
     if not isinstance(k, basestring):

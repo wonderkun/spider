@@ -37,9 +37,14 @@
 # 用法  
 
 ```
+   cd ./server
+   #修改 ./server/server.py   的address 参数为自己服务器的ip  
+   
    cd ./server/bin
    
-   #修改./server/bin/slave.py 的参数 server_addr 为自己的服务器的ip  
+   #修改./server/bin/slave.py 的参数 server_addr 为自己的服务器的ip
+   
+     
    > python pycopile.py   #运行次文件,编译客户端代码 
    > cd ../
      

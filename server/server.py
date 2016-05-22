@@ -181,9 +181,10 @@ if __name__=="__main__":
     
     #start server 
             
-    manager=TaskManager(authkey=args.authkey,rootDomain=args.domain,digSubDomain=args.i,port=args.port,threads_num=args.T)
+    manager=TaskManager(address='192.168.191.2',authkey=args.authkey,rootDomain=args.domain,digSubDomain=args.i,port=args.port,threads_num=args.T)
 # manager.start_work()
     manager.init__work()
     manager.pushTask()
     manager.shutdown_work()
+    
     
