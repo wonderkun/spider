@@ -1,203 +1,6 @@
 #!/usr/bin/python
 #-*-coding:utf-8-*-  
 
-# import urlparse 
-# import requests as req
-# import time 
-
-
-# class domainRecorder():
-
-#     '''
-#         用来记录域名,判断子域名的可用性,
-#         记录在同一个域名下的路径 
-#         记录子域名的个数 
-        
-#     '''
-    
-#     def __time(self):
-#         return time.strftime("%H:%M:%S",time.localtime(time.time())) 
-        
-#     def __init__(self,scheme="http",rootDomain=None,domain='',path='/',isSubDomain=False):
-        
-#         self.rootDomain=rootDomain.strip()
-        
-#         self.domain=domain.strip()
-#         self.path=path.strip()
-#         self.scheme=scheme.strip()
-#         self.count=0
-#         self.isSubDomain=isSubDomain
-            
-#         if self.isSubDomain:
-#             self.__GetStatus()
-        
-#     def __GetStatus(self):
-           
-#         url=self.getUrl()
-        
-#         try:
-#             response=req.get(url)
-#         except req.exceptions.ConnectionError,e:    #说明这是一个顶级域名            
-#             self.domain="www."+self.domain
-
-
-#     def printSelf(self):
-    
-#         if self.isSubDomain:  #获取了subdomain 
-#             print "[%s] [INFO] Get  subdomain:[%s],RootDomain:[%s],Num:[%d]"%(self.__time(),self.domain,self.rootDomain,self.count)
-#         else:
-                    
-#             print "[%s] [INFO] Get path:[%s],in subdomain:[%s],in RootDomain:[%s],Num:[%d]"%(self.__time(),self.path,self.domain,self.rootDomain,self.count)
-    
-#     def judgeDomain(self):  #判断是否是一个子域名 
-#         domain_list=self.domain.split('.')
-#         rootDomain_list=self.rootDomain.split('.')
-#         # print domain_list
-#         domain_len=len(domain_list)
-#         rootDomain_len=len(rootDomain_list)
-        
-#         if domain_len>rootDomain_len:  #判断是否是一个子域名
-#             domain='.'.join([domain_list[i] for i in range(domain_len-rootDomain_len,domain_len)])
-#             if domain!=self.rootDomain:
-#                 return False        
-#         if domain_len==rootDomain_len:
-#             if self.domain!=self.rootDomain:
-#                 return False
-#         return True
-
-
-#     def __eq__(self,other):    #重载== 号运算符,判断两个url是否是在同一个目录下,简单的,就判定了一级目录  
-        
-#         if (self.path=='/') or (other.path=='/'):      # 如果任意一个url是根目录,就返回false
-#             if (self.path!="/") or (other.path!='/'):
-                
-#                 return False
-                        
-#         if self.domain==other.domain:
-            
-#             path1=[]
-#             path2=[] 
-            
-            
-#             path_tmp1=self.path.split('/')
-            
-#             for i in path_tmp1:
-#                 if i!='':
-#                     path1.append(i)
-                    
-#             path_tmp2=other.path.split('/')
-            
-#             for i in path_tmp2:
-#                 if i!='':
-#                     path2.append(i)
-            
-            
-#             '''
-#                     ''  'index'
-#             '''
-            
-#             # print "#"*50,path_tmp1,path_tmp2
-            
-            
-#             try:    
-#                 if path1[0]==path2[0]:
-#                     return True     
-#             except IndexError,e:
-                
-#                 if len(path1)==0 and len(path2)==0:
-#                     return True
-#                 else:
-#                     return False
-                        
-#         return False
-        
-        
-#     def  getUrl(self):  #返回此条记录的url
-         
-#         url=urlparse.urljoin(self.scheme+"://"+self.domain,self.path)
-        
-#         #如果是路径,就要保证最后一定是用/ 结尾 
-        
-#         path=self.path.split('/')
-        
-#         if path[-1]=="":
-#             maybeFile=path[-2]
-#         else:
-#             maybeFile=path[-1]
-                
-#         if "." not in maybeFile:  #表明是一个路径
-#             #说明最后一个是文件名  
-#         #     # print removeNum
-              
-#             url=url.rstrip('/')+"/"  #必须用/结尾  
-#         else:
-#             url=url.rstrip('/')
-            
-#         return url  
-    
-#     def reInit(self,url): #用一个url来重新初始化此类  
-        
-#         #这里保存的一个完整的url,防止401出现
-#         url=urlparse.urlparse(url)
-        
-#         self.scheme=url.scheme
-#         self.domain=url.netloc 
-        
-#         if (self.rootDomain!=self.domain) and (self.judgeDomain):
-#             self.isSubDomain=True  
-        
-#         path=url.path
-#         if path=="":
-#             path="/"
-            
-#         path=path.split('/')
-        
-        
-#         if path[-1]=="":
-#             maybeFile=path[-2]
-#         else:
-#             maybeFile=path[-1]
-            
-            
-#         if "." not in maybeFile:  #表明是一个路径
-#             #说明最后一个是文件名  
-#         #     # print removeNum
-#             path.append('')   #在最后添加一个"" 
-            
-                    
-#         self.path=('/').join(path)
-        
-#         while "//" in self.path: 
-#             self.path=self.path.replace("//",'/')  #把url中的//变为/
-        
-        
-# if  __name__=='__main__':
-    
-    
-#     while True:
-    
-#         list=[]
-#         while True:
-        
-#             a=domainRecorder(rootDomain='baidu.com')
-#             b=domainRecorder(rootDomain="baidu.com")
-#             urla=raw_input("urla:")
-            
-            
-#             a.reInit(urla)
-#             # urlb=raw_input("urlb:")
-#             # b.reInit(urlb)
-            
-#             # a.printSelf()
-            
-#             # list.append(a)
-            
-#             # if b in list:
-#             #     print "True"
-#             # else:
-#             #     print "False"
-            
-#             print a.getUrl()
       
         
 import urlparse 
@@ -249,9 +52,6 @@ class domainRecorder():
             print "[%s] [INFO] Get  subdomain:[%s],RootDomain:[%s],Num:[%d]"%(self.__time(),self.domain,self.rootDomain,self.count)
         else:
             print "[%s] [INFO] Get path:[%s],in subdomain:[%s],in RootDomain:[%s],Num:[%d]"%(self.__time(),self.path,self.domain,self.rootDomain,self.count)
-    
-    
-    
             
     def judgeDomain(self):  #判断是否是一个子域名 
         
@@ -339,8 +139,9 @@ class domainRecorder():
         self.scheme=url.scheme
         self.domain=url.netloc 
         
-        if (self.rootDomain!=self.domain) and (self.judgeDomain):
-            self.isSubDomain=True  
+        # if self.rootDomain!=self.domain:
+            
+        #     self.isSubDomain=True  
         
         path=url.path
         if path=="":
@@ -370,8 +171,9 @@ class domainRecorder():
 if  __name__=='__main__':
     while True:
     
-        a=domainRecorder(rootDomain='nwpu.edu.cn')
+        a=domainRecorder(domain='search.nwpu.edu.cn',rootDomain='nwpu.edu.cn')
         
-        a.printSelf()
+        print a.judgeDomain()
+        
         
         

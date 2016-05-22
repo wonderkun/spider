@@ -52,6 +52,7 @@ class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
 
         """
         path = self.translate_path(self.path)
+        # print path 
                 
         f = None
         

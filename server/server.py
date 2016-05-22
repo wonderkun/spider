@@ -56,6 +56,7 @@ class TaskManager(BaseManager):
             
         else:
             self.domain=domainRecorder(rootDomain=rootDomain,domain=rootDomain,path='/',isSubDomain=False)
+        
         self.domainCount=0
        
     def __time(self):   #格式化输出时间 
@@ -109,31 +110,22 @@ class TaskManager(BaseManager):
             print "[%s] [INFO] I am delaying,  %ds..."%(self.__time(),self.delay)
             
             return 
-        # self.__printTaskQueue()  #打印出来任务队列 
         
         self.count=0    
         domain=self.response_queue.get()
-        
-        # domain.printSelf()
-        # domainUrl=domain.getUrl()
-        
-        # if domainUrl not in self.tasks:  #去除重复  
-            
         self.domainCount+=1
         
         # self.tasks.append(domainUrl)
-        
         domain.count=self.domainCount
         
         self.task_queue.put(domain)
         
         domain.printSelf()
-            
+        
                     
     def  __printTaskQueue(self):
         lists=[]
         listdomain=[]
-        
         while self.task_queue.empty()==False:
             lists.append(self.task_queue.get())
         # print type(lists)
@@ -156,7 +148,8 @@ class TaskManager(BaseManager):
             except KeyboardInterrupt,e:
                 self.START_FLAG=False
                 if self.digSubDomain:
-                    self.DnsBrute.STOP_ME=True     
+                    self.DnsBrute.STOP_ME=True
+                         
                 print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self.__time())
                 # 
                 self.shutdown_work()

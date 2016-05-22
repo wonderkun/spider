@@ -23,105 +23,6 @@ from  urllib import quote
 import urlparse
 import threading
 from bs4 import BeautifulSoup 
-  
-
-  
-class controler(threading.Thread):
-    def __init__(self,father=None,lock=None):
-        threading.Thread.__init__(self)
-        self.father=father
-        self.alive=True
-        self.lock=lock
-    
-    def __time(self):
-        return time.strftime("%H:%M:%S",time.localtime(time.time()))
-        
-        
-    def run(self):
-        i=0 
-        
-        while self.alive:
-            # print len(self.father.visited),len(self.father.pages)
-            
-            print "[%s] [INFO] visited:%d,all:%s ..."%(self.__time(),len(self.father.visited),len(self.father.pages))
-            
-            if len(self.father.visited)==len(self.father.pages):
-                if self.father.task_queue.qsize()==0 and self.father.wait_queue.qsize()==0:
-                    i+=1
-                    if i==3:
-                        self.father.dead_all=True
-                else:
-                    i=0
-            count=0
-            
-            for thread in self.father.threads:
-                # self.lock.acquire()           #读取子进程获取的url到父进程中来
-                if len(thread.pages)>0:
-                
-                    while  len(thread.pages)>0:   #如果pages中有数据
-                        page=thread.pages.pop(0)  #从最前面开始删除
-                        
-                        
-                        domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
-                        domainTmp.reInit(page)
-                        
-                        if self.__judgePath(page):
-                            #如果是在同一域名下且是同一目录下 
-                            
-                            if  self.father.in_pages(page):  #如果已经添加了
-                                continue
-                            
-                            self.father.add_pages(page)
-                            self.father.wait_queue.put(page) 
-                        
-                        else: 
-                           
-                           #如果没有在当前目录下
-                            if domainTmp.getPath()   in   self.father.paths:  #如果获得过这个任务  
-                               if self.father.in_pages(page):
-                                    continue
-                               self.father.add_pages(page)
-                               self.father.wait_queue(page)
-                            
-                            else:  #如果不是,就添加到server的等待队列中去
-                                
-                                print "[%s] [INFO] %s is not in same directory or domain with master ..." %(self.__time(),page)
-                                
-                                try:    
-                                    
-                                    # print "$"*100
-                                    # domainTmp.printSelf()
-                                    self.father.server_response_queue.put(domainTmp)
-                                    
-                                except Exception,e:
-                                    print e     
-                    
-                
-                else:
-                    
-                    count=count+1
-                    
-                    if count==len(self.father.threads): #说明所有的页面都没有返回 pages
-                        time.sleep(3)
-                        count=0                        
-                    print "[%s] [WARNING]  %s is  not return pages ..."%(self.__time(),thread.name)
-                # self.lock.release()
-                
-    def __judgePath(self,page):   #判断跟父线程发布的任务的域名关系和路径关系  
-        
-        domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
-        domainTmp.reInit(page)  #重新初始化 
-        
-        if domainTmp==self.father.domain:
-            return True 
-        return False 
-                                                  
-    def stop(self):
-        if self.alive!=False:
-            self.alive=False
-            
-            
-            
 
 class worker(threading.Thread):
     '''
@@ -200,7 +101,7 @@ class worker(threading.Thread):
         
         while True:
             try:
-                response=requests.get(url,headers=header,timeout=3)
+                response=requests.get(url,headers=header,timeout=5)
             except:
                 # print url,"open failed!!"
                 repeat_time+=1
@@ -221,8 +122,8 @@ class worker(threading.Thread):
                 # print self.name+url,"Maybe not have href"
                 continue
             
-            
             res=urlparse.urlparse(ret)
+            
             try:
                 ret=urlparse.urlunparse((res[0],res[1],quote(res[2]),res[3],res[4],'')) #为了删除url中的锚点
             except KeyError,e:
@@ -230,18 +131,21 @@ class worker(threading.Thread):
                 
             res=urlparse.urlparse(ret)
             #修正url
+            
             if res[0] is '' and res[1] is '':   #如果没有协议和域名,就是相对于当前目录的相对地址 
-                url_split=urlparse.urlparse(url)
                 
+                
+                url_split=urlparse.urlparse(url)
                 #url除去文件名,仅仅留下目录名,就ok了 
                 
-                #
+                
                 path=url_split[2]
                 path=path.split('/')
                 
                 if path[-1]=="":
                     maybeFile=path[-2]
                     removeNum=-2
+                    
                 else:
                     maybeFile=path[-1]
                     removeNum=-1
@@ -260,16 +164,15 @@ class worker(threading.Thread):
                 
                 path=path.rstrip('/')+'/'  #确保url使用/结尾的  
                 
+                
                 ret=url_split[0]+"://"+url_split[1]+path+ret 
                 
                 ret=ret[:8]+ret[8:].replace("//",'/')  #把url中的//变为/
                 res=urlparse.urlparse(ret)
                 
                 paths=res[2].split('/')
-                        
                 
                 #防止url出现  http://test.com/./test.html
-                
                 for i in range(len(paths)):
                     if '.'==paths[i]:
                         paths[i]=""
@@ -286,6 +189,7 @@ class worker(threading.Thread):
                 
                 
                 #  防止 http://domain/dir/../dir/   出现在url中    
+                
                 if "../" in res[2]:
                     paths=res[2].split('/')
                     for i in range(len(paths)):
@@ -352,8 +256,7 @@ class worker(threading.Thread):
         if self.is_runable!=False:
             self.is_runable=False
             
-            
-            
+
 class domainRecorder():
 
     '''
@@ -365,16 +268,14 @@ class domainRecorder():
     def __time(self):
         return time.strftime("%H:%M:%S",time.localtime(time.time())) 
         
-    def __init__(self,scheme="http",rootDomain=None,domain='',path='/',isSubDomain=False):
-        
+    def __init__(self,scheme="http",rootDomain='',domain='',path='/',isSubDomain=False):
         
         
         self.rootDomain=rootDomain.strip()
-        self.domain=domain.strip()
+        self.domain=domain.strip() if domain else rootDomain.strip()
         self.path=path.strip()
         self.scheme=scheme.strip()
         self.count=0
-        
         self.isSubDomain=isSubDomain
         
         self.url=self.path    #self.url 跟self.path是不一样的,
@@ -382,16 +283,16 @@ class domainRecorder():
         if self.isSubDomain:
             self.__GetStatus()
         
+        
     def __GetStatus(self):
            
         url=self.getUrl()
         
         try:
             response=requests.get(url)
-            
-        except requests.exceptions.ConnectionError,e:    #说明这是一个顶级域名            
+        except requests.exceptions.ConnectionError,e:       #说明这是一个顶级域名
+                                
             self.domain="www."+self.domain
-
 
     def printSelf(self):
     
@@ -399,9 +300,6 @@ class domainRecorder():
             print "[%s] [INFO] Get  subdomain:[%s],RootDomain:[%s],Num:[%d]"%(self.__time(),self.domain,self.rootDomain,self.count)
         else:
             print "[%s] [INFO] Get path:[%s],in subdomain:[%s],in RootDomain:[%s],Num:[%d]"%(self.__time(),self.path,self.domain,self.rootDomain,self.count)
-    
-    
-    
             
     def judgeDomain(self):  #判断是否是一个子域名 
         
@@ -489,8 +387,9 @@ class domainRecorder():
         self.scheme=url.scheme
         self.domain=url.netloc 
         
-        if (self.rootDomain!=self.domain) and (self.judgeDomain):
-            self.isSubDomain=True  
+        # if self.rootDomain!=self.domain:
+            
+        #     self.isSubDomain=True  
         
         path=url.path
         if path=="":
@@ -515,9 +414,105 @@ class domainRecorder():
             
         while "//" in self.path: 
             self.path=self.path.replace("//",'/')  #把url中的//变为/
+
+class controler(threading.Thread):
+    def __init__(self,father=None,lock=None):
+        threading.Thread.__init__(self)
+        self.father=father
+        self.alive=True
+        self.lock=lock
+    
+    def __time(self):
+        return time.strftime("%H:%M:%S",time.localtime(time.time()))
         
-
-
+        
+    def run(self):
+        i=0 
+        
+        while self.alive:
+            # print len(self.father.visited),len(self.father.pages)
+            
+            print "[%s] [INFO] visited:%d,all:%s ..."%(self.__time(),len(self.father.visited),len(self.father.pages))
+            
+            if len(self.father.visited)==len(self.father.pages):
+                if self.father.task_queue.qsize()==0 and self.father.wait_queue.qsize()==0:
+                    i+=1
+                    if i==3:
+                        self.father.dead_all=True
+                else:
+                    i=0
+            count=0
+            
+            for thread in self.father.threads:
+                # self.lock.acquire()           #读取子进程获取的url到父进程中来
+                if len(thread.pages)>0:
+                
+                    while  len(thread.pages)>0:   #如果pages中有数据
+                        page=thread.pages.pop(0)  #从最前面开始删除
+                        
+                        
+                        domainTmp=domainRecorder(rootDomain=self.father.rootDomain,isSubDomain=False)
+                        domainTmp.reInit(page)
+                        
+                        
+                        if self.__judgePath(page):
+                            #如果是在同一域名下且是同一目录下 
+                            
+                            if  self.father.in_pages(page):  #如果已经添加了
+                                continue
+                            
+                            self.father.add_pages(page)
+                            self.father.wait_queue.put(page) 
+                        
+                        else: 
+                            
+                            
+                           #如果没有在当前目录下
+                            if domainTmp.getPath()   in   self.father.paths:  #如果获得过这个任务  
+                               
+                               if self.father.in_pages(page):
+                                    continue
+                               
+                               self.father.add_pages(page)
+                               self.father.wait_queue.put(page)
+                               
+                            else:  #如果不是,就添加到server的等待队列中去
+                                
+                                print "[%s] [INFO] %s is not in same directory or domain with master ..." %(self.__time(),page)
+                                
+                                try:    
+                                    
+                                    # print "$"*100
+                                    # domainTmp.printSelf()
+                                    self.father.server_response_queue.put(domainTmp)
+                                    
+                                except Exception,e:
+                                    print e     
+                    
+                
+                else:
+                    
+                    count=count+1
+                    
+                    if count==len(self.father.threads): #说明所有的页面都没有返回 pages
+                        time.sleep(3)
+                        count=0                        
+                    print "[%s] [WARNING]  %s is  not return pages ..."%(self.__time(),thread.name)
+                # self.lock.release()
+                
+    def __judgePath(self,page):   #判断跟父线程发布的任务的域名关系和路径关系  
+        
+        domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
+        domainTmp.reInit(page)  #重新初始化 
+        
+        if domainTmp==self.father.domain:
+            return True 
+        return False 
+                                                  
+    def stop(self):
+        if self.alive!=False:
+            self.alive=False
+            
 
 class master(threading.Thread,BaseManager):  #多重继承  
     '''
@@ -720,12 +715,10 @@ class master(threading.Thread,BaseManager):  #多重继承
                     
                     self.times=0
                     self.domain=self.server_task_queue.get()
-                    
-                    # print type(self.server_task_queue.get())
-                    
                     self.domain.printSelf()
                     self.rootDomain=self.domain.rootDomain
-                    self.paths.append(self.domain.getPath())    #把得到的任务,做一个记录 
+                    self.paths.append(self.domain.getPath())    #把得到的任务,做一个记录
+                    
                     
                     #domainRecorder 的 url 需要保存到任务队列,当path和url不一样的时候,也需要保存到任务队列中去
                     
@@ -738,22 +731,21 @@ class master(threading.Thread,BaseManager):  #多重继承
                     self.wait_queue.put(self.task)
                     self.add_pages(self.task)
                     
-                    
                     # if self.domain.getPath()!=self.domain.getUrl():
                     #     self.task=self.domain.getPath()
                     #     self.wait_queue.put(self.task)
                     
                     self.start_flag=True 
-                    
+                
                 else:
                      print  "[%s] [INFO] I am waiting for task ..."%(self.__time())
                      self.times+=1
                      time.sleep(2)
-                     
-                    #  self.start_flag=False
+                     self.start_flag=False
                      if(self.times==self.__count):
                         self.Runable=False  
-                        
+                           
+                           
                            
             except KeyboardInterrupt,e:
                 print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self.__time())
@@ -805,15 +797,16 @@ class master(threading.Thread,BaseManager):  #多重继承
             thread.stop()
             thread.join()
             
-            
         self.controler.stop()          
         self.controler.join()
         
         if self.start_flag!=False:
             self.start_flag=False
-                  
+        
+        
 if __name__=="__main__":
-
     a=master(thread_size=10,count=10,server_addr='127.0.0.1')
+    
     a.begin()
+    
     

@@ -111,7 +111,7 @@ class DnsBrute(object):
                                          
                         if (not self.is_intranet(answers[0].address)): #如果不是内网地址
                             #说明获得了一个子域名  
-                            print "[%s] [INFO] Thread-%d Get a subdomain:"%(self.__time(),thread_id),cur_sub_domain,ips
+                            
                             # self.father.response_queue.put()
                             #把子域名压入到父队列中去  
                             
@@ -123,6 +123,7 @@ class DnsBrute(object):
                                 print e
                                 
                             if subdomain.judgeDomain():  #如果是子域名
+                                # print "[%s] [INFO] Thread-%d Get a subdomain:"%(self.__time(),thread_id),cur_sub_domain,ips
                                 self.father.response_queue.put(subdomain)
                                 
                             else:
@@ -160,6 +161,6 @@ class DnsBrute(object):
         
 if __name__=="__main__":
 
-    a=DnsBrute(rootDomain="baidu.com")
+    a=DnsBrute(rootDomain="nwpu.edu.cn")
     a.run()
     

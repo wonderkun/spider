@@ -45,8 +45,9 @@ class controler(threading.Thread):
                         page=thread.pages.pop(0)  #从最前面开始删除
                         
                         
-                        domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
+                        domainTmp=domainRecorder(rootDomain=self.father.rootDomain,isSubDomain=False)
                         domainTmp.reInit(page)
+                        
                         
                         if self.__judgePath(page):
                             #如果是在同一域名下且是同一目录下 
@@ -62,11 +63,13 @@ class controler(threading.Thread):
                             
                            #如果没有在当前目录下
                             if domainTmp.getPath()   in   self.father.paths:  #如果获得过这个任务  
+                               
                                if self.father.in_pages(page):
                                     continue
+                               
                                self.father.add_pages(page)
-                               self.father.wait_queue(page)
-                            
+                               self.father.wait_queue.put(page)
+                               
                             else:  #如果不是,就添加到server的等待队列中去
                                 
                                 print "[%s] [INFO] %s is not in same directory or domain with master ..." %(self.__time(),page)
