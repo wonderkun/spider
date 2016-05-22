@@ -223,11 +223,9 @@ class domainRecorder():
         
         self.rootDomain=rootDomain.strip()
         self.domain=domain.strip() if domain else rootDomain.strip()
-        
         self.path=path.strip()
         self.scheme=scheme.strip()
         self.count=0
-        
         self.isSubDomain=isSubDomain
         
         self.url=self.path    #self.url 跟self.path是不一样的,
