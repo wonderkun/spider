@@ -11,12 +11,11 @@ import random
 from multiprocessing.managers import BaseManager
 
 
-
 try:
     import bsddb
 except:
     print "[ERROR] import bsddb error!! Please install ..."
-
+    
 import os
 import hashlib 
 import requests
@@ -25,6 +24,7 @@ import urlparse
 import threading
 from bs4 import BeautifulSoup 
   
+
   
 class controler(threading.Thread):
     def __init__(self,father=None,lock=None):
@@ -720,6 +720,9 @@ class master(threading.Thread,BaseManager):  #多重继承
                     
                     self.times=0
                     self.domain=self.server_task_queue.get()
+                    
+                    # print type(self.server_task_queue.get())
+                    
                     self.domain.printSelf()
                     self.rootDomain=self.domain.rootDomain
                     self.paths.append(self.domain.getPath())    #把得到的任务,做一个记录 
@@ -735,21 +738,22 @@ class master(threading.Thread,BaseManager):  #多重继承
                     self.wait_queue.put(self.task)
                     self.add_pages(self.task)
                     
+                    
                     # if self.domain.getPath()!=self.domain.getUrl():
                     #     self.task=self.domain.getPath()
                     #     self.wait_queue.put(self.task)
                     
                     self.start_flag=True 
-                
+                    
                 else:
                      print  "[%s] [INFO] I am waiting for task ..."%(self.__time())
                      self.times+=1
                      time.sleep(2)
-                     self.start_flag=False
+                     
+                    #  self.start_flag=False
                      if(self.times==self.__count):
                         self.Runable=False  
-                           
-                           
+                        
                            
             except KeyboardInterrupt,e:
                 print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self.__time())
@@ -801,15 +805,15 @@ class master(threading.Thread,BaseManager):  #多重继承
             thread.stop()
             thread.join()
             
+            
         self.controler.stop()          
         self.controler.join()
         
         if self.start_flag!=False:
             self.start_flag=False
-        
-        
+                  
 if __name__=="__main__":
+
     a=master(thread_size=10,count=10,server_addr='127.0.0.1')
-    
     a.begin()
     

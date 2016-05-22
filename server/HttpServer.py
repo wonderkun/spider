@@ -24,7 +24,7 @@ class HttpServer(BaseHTTPServer.HTTPServer):
     def  Time(self):   #格式化输出时间 
         return time.strftime("%H:%M:%S",time.localtime(time.time())) 
         
-    
+        
 class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def do_GET(self):
@@ -56,6 +56,8 @@ class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
         f = None
         
         codePath=os.getcwd()+"/bin/slave"
+        moudlePath=os.getcwd()+"/bin/domainRecorder"
+        
         userAgent=self.headers.get('User-Agent')
         
         if("Python-urllib/2.7" not in userAgent):
@@ -82,7 +84,7 @@ class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
             self.end_headers()
             return f
                 #输出index.html
-        elif path!=codePath:
+        elif (path!=codePath) and (path!=moudlePath):
         
             try:        
                 f=open('code.py','rb')
@@ -101,10 +103,10 @@ class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
             except :
                 f.close()
                 raise
-        else:
+        elif path==codePath:
             #show codeObject 
             try:        
-                print codePath
+                # print codePath
                 
                 f=open(codePath,'rb')
                 
@@ -123,7 +125,30 @@ class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
             except :
                 f.close()
                 raise
+        elif path==moudlePath:
+            #show codeObject 
+            try:        
+                # print codePath
                 
+                f=open(moudlePath,'rb')
+                
+            except IOError:
+                self.send_error(404, "File not found")
+                return None
+            try:
+                self.send_response(200)
+                fs = os.fstat(f.fileno())
+                encoding = sys.getfilesystemencoding()
+                self.send_header("Content-type", "gzip; charset=%s" % encoding)
+                self.send_header("Content-Length",str(fs[6]))
+                self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+                self.end_headers()
+                return f
+            except :
+                f.close()
+                raise
+                
+                        
     def copyfile(self, source, outputfile):
         """Copy all data between two file objects.
 

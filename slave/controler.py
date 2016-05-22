@@ -58,7 +58,8 @@ class controler(threading.Thread):
                             self.father.wait_queue.put(page) 
                         
                         else: 
-                           
+                            
+                            
                            #如果没有在当前目录下
                             if domainTmp.getPath()   in   self.father.paths:  #如果获得过这个任务  
                                if self.father.in_pages(page):

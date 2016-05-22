@@ -12,7 +12,6 @@ from   domainRecorder import *
 from HttpServer import *
 from  DnsBrute import * 
 import threading 
-from threading import Timer 
 
 
 
@@ -163,7 +162,9 @@ class TaskManager(BaseManager):
                 self.shutdown_work()
             else:
                   # 运行二进制指数退避算法   
-                self.delay=random.randint(0,int(2**self.count*0.5))
+                # self.delay=random.randint(0,int(2**self.count*0.5))
+                self.delay=self.count
+                
                 # self.delay=1
                 
                 self.__push_task()

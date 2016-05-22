@@ -231,7 +231,8 @@ class master(threading.Thread,BaseManager):  #多重继承
                     self.domain=self.server_task_queue.get()
                     self.domain.printSelf()
                     self.rootDomain=self.domain.rootDomain
-                    self.paths.append(self.domain.getPath())    #把得到的任务,做一个记录 
+                    self.paths.append(self.domain.getPath())    #把得到的任务,做一个记录
+                    
                     
                     #domainRecorder 的 url 需要保存到任务队列,当path和url不一样的时候,也需要保存到任务队列中去
                     

@@ -217,8 +217,7 @@ class domainRecorder():
     def __time(self):
         return time.strftime("%H:%M:%S",time.localtime(time.time())) 
         
-    def __init__(self,scheme="http",rootDomain=None,domain='',path='/',isSubDomain=False):
-        
+    def __init__(self,scheme="http",rootDomain='',domain='',path='/',isSubDomain=False):
         
         
         self.rootDomain=rootDomain.strip()

@@ -19,7 +19,6 @@ if __name__=="__main__":
     else:
         file.close()
         
-        
     try:
         co=compile(content,'slave','exec')
     except:
