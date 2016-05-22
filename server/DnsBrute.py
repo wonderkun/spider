@@ -107,7 +107,8 @@ class DnsBrute(object):
                             continue
                                  
                         ips = ', '.join([answer.address for answer in answers]) #获取响应的地址
-                                             
+                        
+                                         
                         if (not self.is_intranet(answers[0].address)): #如果不是内网地址
                             #说明获得了一个子域名  
                             print "[%s] [INFO] Thread-%d Get a subdomain:"%(self.__time(),thread_id),cur_sub_domain,ips
@@ -117,12 +118,13 @@ class DnsBrute(object):
                             try:
                                 
                                 subdomain=domainRecorder(rootDomain=self.rootDomain,domain=cur_sub_domain,isSubDomain=True)
-                                subdomain.printSelf()                                 
+                                # subdomain.printSelf()                                 
                             except Exception,e:
                                 print e
                                 
                             if subdomain.judgeDomain():  #如果是子域名
                                 self.father.response_queue.put(subdomain)
+                                
                             else:
                                 
                                 print "[%s] [ERROR] %s isn't a subdomain of %s"%(self.__time(),cur_sub_domain,self.rootDomain)

@@ -4,6 +4,7 @@
 
 import time 
 import requests
+from  urllib import quote   
 import urlparse
 import Queue
 import threading
@@ -81,15 +82,13 @@ class worker(threading.Thread):
         pages=set()  #存储获得的url 
         newpage_flag=False 
         
-        
-        
         data=""
         header={"Referer":domain,"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.75 Safari/537.36",
                "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp","Accept-Encoding":"*"}
         
         while True:
             try:
-                response=requests.get(url,headers=header,timeout=3)
+                response=requests.get(url,headers=header,timeout=5)
             except:
                 # print url,"open failed!!"
                 repeat_time+=1
@@ -112,14 +111,19 @@ class worker(threading.Thread):
             
             
             res=urlparse.urlparse(ret)
-            ret=urlparse.urlunparse((res[0],res[1],res[2],res[3],res[4],'')) #为了删除url中的锚点
-            res=urlparse.urlparse(ret)   
-            #修正url 
+            try:
+                ret=urlparse.urlunparse((res[0],res[1],quote(res[2]),res[3],res[4],'')) #为了删除url中的锚点
+            except KeyError,e:
+                ret=urlparse.urlunparse((res[0],res[1],quote(res[2].encode('utf-8')),res[3],res[4],''))
+                
+            res=urlparse.urlparse(ret)
+            #修正url
             if res[0] is '' and res[1] is '':   #如果没有协议和域名,就是相对于当前目录的相对地址 
                 url_split=urlparse.urlparse(url)
                 
                 #url除去文件名,仅仅留下目录名,就ok了 
                 
+                #
                 path=url_split[2]
                 path=path.split('/')
                 
@@ -210,10 +214,14 @@ class worker(threading.Thread):
                 continue
             #对文件进行过滤,删除 图片 音频 视频 文档 等
             ext=res[2]
+            
             if ext[ext.rfind('.')+1:ext.rfind('.')+4] in self.ignore:  #获取扩展名
                 continue
                                                                 
             newpage=ret
+            
+            # print "$"*15,newpage
+            
             newpage_flag=False 
             
             if (newpage not in self.pages) and (newpage not in self.temp_pages):

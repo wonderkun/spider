@@ -69,7 +69,7 @@ class HttpServerHandle(BaseHTTPServer.BaseHTTPRequestHandler):
 <body>
     关于Spider的使用说明,仅仅需要两步,就可以了</br>
     一.在服务器端运行main.y</br>
-    二.在客户端运行 python -c "exec(__import__('urllib2').urlopen('http://serverIp:8000/').read())",就可以了</br>
+    二.在客户端运行 python -c "exec(__import__('urllib2').urlopen('http://127.0.0.1:8000/').read())",就可以了</br>
     三.然后就没有然后了</br>
 </body>
 </html>''')

@@ -198,10 +198,12 @@
 #             #     print "False"
             
 #             print a.getUrl()
+      
         
 import urlparse 
-import requests as req
+import requests
 import time 
+
 
 
 class domainRecorder():
@@ -220,7 +222,8 @@ class domainRecorder():
         
         
         self.rootDomain=rootDomain.strip()
-        self.domain=domain.strip()
+        self.domain=domain.strip() if domain else rootDomain.strip()
+        
         self.path=path.strip()
         self.scheme=scheme.strip()
         self.count=0
@@ -232,15 +235,16 @@ class domainRecorder():
         if self.isSubDomain:
             self.__GetStatus()
         
+        
     def __GetStatus(self):
            
         url=self.getUrl()
         
         try:
-            response=req.get(url)
-        except req.exceptions.ConnectionError,e:    #说明这是一个顶级域名            
+            response=requests.get(url)
+        except requests.exceptions.ConnectionError,e:       #说明这是一个顶级域名
+                                
             self.domain="www."+self.domain
-
 
     def printSelf(self):
     
@@ -250,9 +254,10 @@ class domainRecorder():
             print "[%s] [INFO] Get path:[%s],in subdomain:[%s],in RootDomain:[%s],Num:[%d]"%(self.__time(),self.path,self.domain,self.rootDomain,self.count)
     
     
+    
             
     def judgeDomain(self):  #判断是否是一个子域名 
-    
+        
         domain_list=self.domain.split('.')
         rootDomain_list=self.rootDomain.split('.')
         # print domain_list
@@ -270,49 +275,36 @@ class domainRecorder():
 
 
     def __eq__(self,other):    #重载== 号运算符,判断两个url是否是在同一个目录下,简单的,就判定了一级目录  
-         
-         
+        
         if (self.path=='/') or (other.path=='/'):      # 如果任意一个url是根目录,就返回false
             if (self.path!="/") or (other.path!='/'):
+                
                 return False
                         
         if self.domain==other.domain:
-            
             path1=[]
             path2=[] 
-            
             
             path_tmp1=self.path.split('/')
             
             for i in path_tmp1:
-                if i!='':
+                if 1!='':
                     path1.append(i)
-                    
             path_tmp2=other.path.split('/')
             
             for i in path_tmp2:
-                if i!='':
+                if 1!='':
                     path2.append(i)
-            
-            
-            '''
-                    ''  'index'
-            '''
-            
-            # print "#"*50,path_tmp1,path_tmp2
-            
-            
-            try:    
-                if path1[0]==path2[0]:
-                    return True     
-            except IndexError,e:
-                
-                if len(path1)==0 and len(path2)==0:
-                    return True
-                else:
-                    return False
-                        
+            if path1[0]==path2[0]:
+                return True     
         return False
+        
+    
+    def getPath(self):
+        
+        path=urlparse.urljoin(self.scheme+"://"+self.domain,self.path)
+        
+        return path.rstrip('/')+'/'
         
         
     def  getUrl(self):  #返回此条记录的url
@@ -338,6 +330,7 @@ class domainRecorder():
             
         return url  
         
+    # def getPath
     
     
     def reInit(self,url): #用一个url来重新初始化此类  
@@ -355,8 +348,6 @@ class domainRecorder():
         path=url.path
         if path=="":
             path="/"
-            
-            
         path=path.split('/')
         
         if path[-1]=="":
@@ -382,12 +373,8 @@ class domainRecorder():
 if  __name__=='__main__':
     while True:
     
-        a=domainRecorder(rootDomain='www.baidu.com')
-        url=raw_input(':')
+        a=domainRecorder(rootDomain='nwpu.edu.cn')
         
-        a.reInit(url)
         a.printSelf()
-        
-        print a.getUrl()
         
         

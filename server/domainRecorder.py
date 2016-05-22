@@ -198,10 +198,12 @@
 #             #     print "False"
             
 #             print a.getUrl()
+      
         
 import urlparse 
-import requests as req
+import requests
 import time 
+
 
 
 class domainRecorder():
@@ -220,7 +222,8 @@ class domainRecorder():
         
         
         self.rootDomain=rootDomain.strip()
-        self.domain=domain.strip()
+        self.domain=domain.strip() if domain else rootDomain.strip()
+        
         self.path=path.strip()
         self.scheme=scheme.strip()
         self.count=0
@@ -232,15 +235,16 @@ class domainRecorder():
         if self.isSubDomain:
             self.__GetStatus()
         
+        
     def __GetStatus(self):
            
         url=self.getUrl()
         
         try:
-            response=req.get(url)
-        except req.exceptions.ConnectionError,e:    #说明这是一个顶级域名            
+            response=requests.get(url)
+        except requests.exceptions.ConnectionError,e:       #说明这是一个顶级域名
+                                
             self.domain="www."+self.domain
-
 
     def printSelf(self):
     
@@ -250,9 +254,10 @@ class domainRecorder():
             print "[%s] [INFO] Get path:[%s],in subdomain:[%s],in RootDomain:[%s],Num:[%d]"%(self.__time(),self.path,self.domain,self.rootDomain,self.count)
     
     
+    
             
     def judgeDomain(self):  #判断是否是一个子域名 
-    
+        
         domain_list=self.domain.split('.')
         rootDomain_list=self.rootDomain.split('.')
         # print domain_list
@@ -294,6 +299,13 @@ class domainRecorder():
                 return True     
         return False
         
+    
+    def getPath(self):
+        
+        path=urlparse.urljoin(self.scheme+"://"+self.domain,self.path)
+        
+        return path.rstrip('/')+'/'
+        
         
     def  getUrl(self):  #返回此条记录的url
          
@@ -318,6 +330,7 @@ class domainRecorder():
             
         return url  
         
+    # def getPath
     
     
     def reInit(self,url): #用一个url来重新初始化此类  
@@ -335,8 +348,6 @@ class domainRecorder():
         path=url.path
         if path=="":
             path="/"
-            
-            
         path=path.split('/')
         
         if path[-1]=="":
@@ -362,12 +373,8 @@ class domainRecorder():
 if  __name__=='__main__':
     while True:
     
-        a=domainRecorder(rootDomain='www.baidu.com')
-        url=raw_input(':')
+        a=domainRecorder(rootDomain='nwpu.edu.cn')
         
-        a.reInit(url)
         a.printSelf()
-        
-        print a.getUrl()
         
         

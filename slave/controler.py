@@ -26,7 +26,7 @@ class controler(threading.Thread):
         while self.alive:
             # print len(self.father.visited),len(self.father.pages)
             
-            print "[%s] [INFO] visited:%d,unvisited:%s ..."%(self.__time(),len(self.father.visited),len(self.father.pages))
+            print "[%s] [INFO] visited:%d,all:%s ..."%(self.__time(),len(self.father.visited),len(self.father.pages))
             
             if len(self.father.visited)==len(self.father.pages):
                 if self.father.task_queue.qsize()==0 and self.father.wait_queue.qsize()==0:
@@ -44,33 +44,46 @@ class controler(threading.Thread):
                     while  len(thread.pages)>0:   #如果pages中有数据
                         page=thread.pages.pop(0)  #从最前面开始删除
                         
-                        if self.__judgePath(page):    
+                        
+                        domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
+                        domainTmp.reInit(page)
+                        
+                        if self.__judgePath(page):
                             #如果是在同一域名下且是同一目录下 
+                            
                             if  self.father.in_pages(page):  #如果已经添加了
                                 continue
-                                
+                            
                             self.father.add_pages(page)
                             self.father.wait_queue.put(page) 
                         
-                        else:  #如果不是,就添加到server的等待队列中去
-                        
-                            print "[%s] [INFO] %s is not in same directory or domain with master ..." %(self.__time(),page)
-                            try:    
+                        else: 
+                           
+                           #如果没有在当前目录下
+                            if domainTmp.getPath()   in   self.father.paths:  #如果获得过这个任务  
+                               if self.father.in_pages(page):
+                                    continue
+                               self.father.add_pages(page)
+                               self.father.wait_queue(page)
+                            
+                            else:  #如果不是,就添加到server的等待队列中去
                                 
-                                domainTmp=domainRecorder(rootDomain=self.father.rootDomain)
-                                domainTmp.reInit(page)
+                                print "[%s] [INFO] %s is not in same directory or domain with master ..." %(self.__time(),page)
                                 
-                                # print "$"*100
-                                # domainTmp.printSelf()
-                                
-                                self.father.server_response_queue.put(domainTmp)
-                                
-                            except Exception,e:
-                                print e     
-                
+                                try:    
+                                    
+                                    # print "$"*100
+                                    # domainTmp.printSelf()
+                                    self.father.server_response_queue.put(domainTmp)
+                                    
+                                except Exception,e:
+                                    print e     
+                    
                 
                 else:
+                    
                     count=count+1
+                    
                     if count==len(self.father.threads): #说明所有的页面都没有返回 pages
                         time.sleep(3)
                         count=0                        
@@ -89,4 +102,6 @@ class controler(threading.Thread):
     def stop(self):
         if self.alive!=False:
             self.alive=False
+            
+            
             

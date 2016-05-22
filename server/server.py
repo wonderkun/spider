@@ -41,8 +41,7 @@ class TaskManager(BaseManager):
         self.register('task_queue_n',callable=lambda:task_queue_n)
         self.register('response_queue_n',callable=lambda:response_queue_n)
          
-        self.tasks=[]  #记录自己已经访问过的域名,或者路径 
-        
+        # self.tasks=[]  #记录自己已经访问过的域名,或者路径 
         
         self.digSubDomain=digSubDomain
         self.DnsThread=None 
@@ -51,13 +50,15 @@ class TaskManager(BaseManager):
         self.count=0   #访问错误计数
         self.delay=0  #延时时间 
         
-        self.threads_num=threads_num #爆破子域名的线程数 
-        self.domain=domainRecorder(rootDomain=rootDomain,domain=rootDomain,path='/',isSubDomain=False)
-        
+        self.threads_num=threads_num #爆破子域名的线程数
+        if self.digSubDomain:
+            
+            self.domain=domainRecorder(rootDomain=rootDomain,domain=rootDomain,path='/',isSubDomain=True)
+            
+        else:
+            self.domain=domainRecorder(rootDomain=rootDomain,domain=rootDomain,path='/',isSubDomain=False)
         self.domainCount=0
-        
-        
-        
+       
     def __time(self):   #格式化输出时间 
     
         return time.strftime("%H:%M:%S",time.localtime(time.time()))   
@@ -93,6 +94,7 @@ class TaskManager(BaseManager):
         print "[%s] [*] Server authkey is %s"%(self.__time(),self.authkey)
         print "[%s] [*] To get help information,please visite %s:%d"%(self.__time(),self.address[0],8000)
         print "\n"
+    
         
     def __start_httpserver(self):
         
@@ -114,17 +116,19 @@ class TaskManager(BaseManager):
         domain=self.response_queue.get()
         
         # domain.printSelf()
-        domainUrl=domain.getUrl()
+        # domainUrl=domain.getUrl()
         
-        if domainUrl not in self.tasks:  #去除重复  
+        # if domainUrl not in self.tasks:  #去除重复  
             
-            
-            self.domainCount+=1
-            
-            self.tasks.append(domainUrl)
-            domain.count=self.domainCount
-            self.task_queue.put(domain)
-            domain.printSelf()
+        self.domainCount+=1
+        
+        # self.tasks.append(domainUrl)
+        
+        domain.count=self.domainCount
+        
+        self.task_queue.put(domain)
+        
+        domain.printSelf()
             
                     
     def  __printTaskQueue(self):

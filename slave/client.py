@@ -87,6 +87,7 @@ class master(threading.Thread,BaseManager):  #多重继承
         except Exception,e:
             print "[%s] [ERROR] Connect to server error , please confirm ip,port and authkey ..."%(self.__time())
             exit(0)
+        
         self.server_task_queue=self.task_queue_n()  #server 的任务队列 
         self.server_response_queue=self.response_queue_n()  #server 的返回队列 
         
@@ -97,9 +98,11 @@ class master(threading.Thread,BaseManager):  #多重继承
         self.__init_threads__()
         self.__init__bsddb__()
         self.begin_time=time.time()
-        
         self.times=0
         
+        # 本地需要记录自己的获得过的任务  
+        
+        self.paths=[]
         
         
     def __printResult(self):
@@ -200,13 +203,14 @@ class master(threading.Thread,BaseManager):  #多重继承
     def add_pages(self,url=""):
         if url=="":
             return 0
+        # print url
+          
         self.md5hash=hashlib.md5()
         self.md5hash.update(url)
         hash=self.md5hash.hexdigest()
         self.pages[hash]=url
         self.pages.sync()
          
-
     def run(self):
         #运行的主函数
         '''
@@ -220,19 +224,32 @@ class master(threading.Thread,BaseManager):  #多重继承
         while self.Runable:
             
             try:
+                
                 if self.server_task_queue.empty()==False:
                     
                     self.times=0
                     self.domain=self.server_task_queue.get()
                     self.domain.printSelf()
                     self.rootDomain=self.domain.rootDomain
+                    self.paths.append(self.domain.getPath())    #把得到的任务,做一个记录 
                     
+                    #domainRecorder 的 url 需要保存到任务队列,当path和url不一样的时候,也需要保存到任务队列中去
+                    
+                    if self.domain.getUrl()!=self.domain.getPath():
+                        self.task=self.domain.getPath()
+                        self.wait_queue.put(self.task)
+                        self.add_pages(self.task)                                                                      
+                                            
                     self.task=self.domain.getUrl()  #
                     self.wait_queue.put(self.task)
                     self.add_pages(self.task)
+                    
+                    # if self.domain.getPath()!=self.domain.getUrl():
+                    #     self.task=self.domain.getPath()
+                    #     self.wait_queue.put(self.task)
+                    
                     self.start_flag=True 
-                    
-                    
+                
                 else:
                      print  "[%s] [INFO] I am waiting for task ..."%(self.__time())
                      self.times+=1
@@ -240,6 +257,8 @@ class master(threading.Thread,BaseManager):  #多重继承
                      self.start_flag=False
                      if(self.times==self.__count):
                         self.Runable=False  
+                           
+                           
                            
             except KeyboardInterrupt,e:
                 print "[%s] [WARNING] User aborted, wait all slave threads to exit..."%(self.__time())
@@ -271,14 +290,12 @@ class master(threading.Thread,BaseManager):  #多重继承
                 else:
                     print "[%s] [INFO] Task_queue is full,I am waiting ..."%(self.__time())
                     time.sleep(0.8)
-                          
                 if (self.finished_all==True) and (self.dead_all==True):                  
                     if self.start_flag!=False:
                         self.start_flag=False
         
         
         self.__stop()
-        
         
         # time.sleep(5)
        
