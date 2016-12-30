@@ -36,7 +36,7 @@
 
 # 用法  
 
-```python
+```bash
    cd ./server
    #修改 ./server/server.py   的address 参数为自己服务器的ip  
    
