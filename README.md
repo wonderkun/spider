@@ -45,11 +45,11 @@
    #修改./server/bin/slave.py 的参数 server_addr 为自己的服务器的ip
    
      
-   > python pycopile.py   #运行次文件,编译客户端代码 
-   > cd ../
+     python pycopile.py   #运行次文件,编译客户端代码 
+     cd ../
      
-   > python server.py  domain  [-i]  [-T num]   #运行server   -i 指定是否进行子域名爆破,-T 指定线程 
-   > python -c "exec(__import__('urllib2').urlopen('http://server_addr:8000/').read())"   # server_addr 换为自己的ip,然后运行起来客户端 
+     python server.py  domain  [-i]  [-T num]   #运行server   -i 指定是否进行子域名爆破,-T 指定线程 
+     python -c "exec(__import__('urllib2').urlopen('http://server_addr:8000/').read())"   # server_addr 换为自己的ip,然后运行起来客户端 
           
 ```
 
