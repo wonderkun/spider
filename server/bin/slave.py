@@ -806,7 +806,7 @@ class master(threading.Thread,BaseManager):  #多重继承
         
 if __name__=="__main__":
     
-    a=master(thread_size=10,count=10,server_addr='192.168.191.2')
+    a=master(thread_size=10,count=10,server_addr='192.168.191.3')
     a.begin()
     
     

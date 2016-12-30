@@ -236,9 +236,6 @@ class worker(threading.Thread):
                 pass 
             
             
-            
-            
-            
     def stop(self):
         if self.is_runable!=False:
             self.is_runable=False
